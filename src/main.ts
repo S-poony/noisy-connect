@@ -105,7 +105,7 @@ function drawGraph(revealMoves: MoveRecord[] | null = null): void {
 
   if (revealMoves) {
     revealMoves.forEach((m) => {
-      allX.push(m.etaX);
+      allX.push(m.trueX);
       allY.push(m.col);
     });
   }
@@ -203,8 +203,8 @@ function drawGraph(revealMoves: MoveRecord[] | null = null): void {
   // ── True placement dots (reveal only) ──────────────────────────────────────
   if (revealMoves) {
     revealMoves.forEach((m) => {
-      const [px, py]   = toPixel(m.etaX, m.col, xMin, xMax, yMin, yMax, W, H);
-      const [, yZero]  = toPixel(m.etaX, 0,     xMin, xMax, yMin, yMax, W, H);
+      const [px, py]   = toPixel(m.trueX, m.col, xMin, xMax, yMin, yMax, W, H);
+      const [, yZero]  = toPixel(m.trueX, 0,     xMin, xMax, yMin, yMax, W, H);
 
       // Thin vertical line from x-axis to dot
       ctx.beginPath();
