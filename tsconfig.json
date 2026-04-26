@@ -9,5 +9,5 @@
     "forceConsistentCasingInFileNames": true,
     "types": ["bun-types"]
   },
-  "include": ["*.ts"]
+  "include": ["*.ts", "src/**/*.ts"]
 }

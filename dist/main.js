@@ -1,0 +1,268 @@
+// src/game.ts
+var MAX_MOVES = 20;
+function gaussRandom(mean, sigma) {
+  let u1;
+  let u2;
+  do {
+    u1 = Math.random();
+  } while (u1 === 0);
+  u2 = Math.random();
+  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  return mean + sigma * z;
+}
+function uniform(a, b) {
+  return Math.random() * (b - a) + a;
+}
+function createGame() {
+  return {
+    a: uniform(8, 16),
+    b: uniform(0.5, 2),
+    sigmaEta: uniform(0, 3),
+    sigmaEps: uniform(0, 3),
+    moves: [],
+    moveCount: 0,
+    claimed: false
+  };
+}
+function submitMove(state, x) {
+  const { a, b, sigmaEta, sigmaEps } = state;
+  const eta = gaussRandom(0, sigmaEta);
+  const trueX = x + eta;
+  const trueF = a * Math.sin(b * trueX);
+  const col = Math.round(trueF);
+  const epsilon = gaussRandom(0, sigmaEps);
+  const observed = trueF + epsilon;
+  const record = { x, observed, col };
+  const newState = {
+    ...state,
+    moves: [...state.moves, record],
+    moveCount: state.moveCount + 1
+  };
+  return { observed, col, newState };
+}
+function checkWin(state) {
+  const occupied = new Set(state.moves.map((m) => m.col));
+  return [...occupied].some((c) => [0, 1, 2, 3].every((i) => occupied.has(c + i)));
+}
+
+// src/main.ts
+var canvas = document.getElementById("graph");
+var ctx = canvas.getContext("2d");
+var inputX = document.getElementById("input-x");
+var btnDrop = document.getElementById("btn-drop");
+var btnClaim = document.getElementById("btn-claim");
+var btnNewGame = document.getElementById("btn-new-game");
+var movesValue = document.getElementById("moves-value");
+var statusMsg = document.getElementById("status-msg");
+var logList = document.getElementById("log");
+var overlay = document.getElementById("overlay");
+var overlayTitle = document.getElementById("overlay-title");
+var overlayBody = document.getElementById("overlay-body");
+var btnOverlayNew = document.getElementById("btn-overlay-new");
+var revealLegend = document.querySelectorAll(".reveal-only");
+var state = createGame();
+var PADDING = { top: 20, right: 20, bottom: 36, left: 48 };
+var DOT_R_NOISY = 4;
+var DOT_R_TRUE = 5;
+var COLOR_NOISY = "#aaaaaa";
+var COLOR_TRUE = "#2563eb";
+var COLOR_AXIS = "#e5e7eb";
+var COLOR_TICK = "#999999";
+var COLOR_ZERO = "#cccccc";
+var FONT_TICK = "11px 'JetBrains Mono', monospace";
+function toPixel(x, y, xMin, xMax, yMin, yMax, w, h) {
+  const px = PADDING.left + (x - xMin) / (xMax - xMin) * w;
+  const py = PADDING.top + (yMax - y) / (yMax - yMin) * h;
+  return [px, py];
+}
+function niceStep(range, targetTicks = 6) {
+  const rough = range / targetTicks;
+  const pow = Math.pow(10, Math.floor(Math.log10(rough)));
+  const norm = rough / pow;
+  if (norm <= 1)
+    return pow;
+  if (norm <= 2)
+    return 2 * pow;
+  if (norm <= 5)
+    return 5 * pow;
+  return 10 * pow;
+}
+function expand(min, max, margin = 0.12) {
+  const span = max - min || 2;
+  return [min - span * margin, max + span * margin];
+}
+function drawGraph(revealMoves = null) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const cssW = rect.width;
+  const cssH = rect.height;
+  if (canvas.width !== Math.round(cssW * dpr) || canvas.height !== Math.round(cssH * dpr)) {
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    ctx.scale(dpr, dpr);
+  }
+  const W = cssW - PADDING.left - PADDING.right;
+  const H = cssH - PADDING.top - PADDING.bottom;
+  ctx.clearRect(0, 0, cssW, cssH);
+  const noisyMoves = state.moves;
+  const allX = noisyMoves.map((m) => m.x);
+  const allY = noisyMoves.map((m) => m.observed);
+  if (revealMoves) {
+    revealMoves.forEach((m) => {
+      allX.push(m.x);
+      allY.push(m.col);
+    });
+  }
+  let [xMin, xMax] = allX.length ? expand(Math.min(...allX), Math.max(...allX)) : [-5, 5];
+  let [yMin, yMax] = allY.length ? expand(Math.min(...allY), Math.max(...allY)) : [-12, 12];
+  xMin = Math.min(xMin, 0);
+  xMax = Math.max(xMax, 0);
+  yMin = Math.min(yMin, 0);
+  yMax = Math.max(yMax, 0);
+  ctx.save();
+  ctx.font = FONT_TICK;
+  ctx.fillStyle = COLOR_TICK;
+  ctx.textAlign = "right";
+  ctx.textBaseline = "middle";
+  const yStep = niceStep(yMax - yMin);
+  const yStart = Math.ceil(yMin / yStep) * yStep;
+  for (let yv = yStart;yv <= yMax + 0.000000001; yv += yStep) {
+    const [, py] = toPixel(0, yv, xMin, xMax, yMin, yMax, W, H);
+    const isZero = Math.abs(yv) < 0.000000001;
+    ctx.strokeStyle = isZero ? COLOR_ZERO : COLOR_AXIS;
+    ctx.lineWidth = isZero ? 1.5 : 1;
+    ctx.beginPath();
+    ctx.moveTo(PADDING.left, py);
+    ctx.lineTo(PADDING.left + W, py);
+    ctx.stroke();
+    ctx.fillText(Number.isInteger(yv) ? String(yv) : yv.toFixed(1), PADDING.left - 6, py);
+  }
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  const xStep = niceStep(xMax - xMin);
+  const xStart = Math.ceil(xMin / xStep) * xStep;
+  for (let xv = xStart;xv <= xMax + 0.000000001; xv += xStep) {
+    const [px] = toPixel(xv, 0, xMin, xMax, yMin, yMax, W, H);
+    const isZero = Math.abs(xv) < 0.000000001;
+    ctx.strokeStyle = isZero ? COLOR_ZERO : COLOR_AXIS;
+    ctx.lineWidth = isZero ? 1.5 : 1;
+    ctx.beginPath();
+    ctx.moveTo(px, PADDING.top);
+    ctx.lineTo(px, PADDING.top + H);
+    ctx.stroke();
+    ctx.fillStyle = COLOR_TICK;
+    ctx.fillText(Number.isInteger(xv) ? String(xv) : xv.toFixed(1), px, PADDING.top + H + 6);
+  }
+  ctx.restore();
+  noisyMoves.forEach((m) => {
+    const [px, py] = toPixel(m.x, m.observed, xMin, xMax, yMin, yMax, W, H);
+    ctx.beginPath();
+    ctx.arc(px, py, DOT_R_NOISY, 0, Math.PI * 2);
+    ctx.fillStyle = COLOR_NOISY;
+    ctx.fill();
+  });
+  if (revealMoves) {
+    revealMoves.forEach((m) => {
+      const [px, py] = toPixel(m.x, m.col, xMin, xMax, yMin, yMax, W, H);
+      const [, yZero] = toPixel(m.x, 0, xMin, xMax, yMin, yMax, W, H);
+      ctx.beginPath();
+      ctx.moveTo(px, yZero);
+      ctx.lineTo(px, py);
+      ctx.strokeStyle = COLOR_TRUE;
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.4;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      ctx.beginPath();
+      ctx.arc(px, py, DOT_R_TRUE, 0, Math.PI * 2);
+      ctx.fillStyle = COLOR_TRUE;
+      ctx.fill();
+    });
+  }
+}
+function appendLog(text) {
+  const li = document.createElement("li");
+  li.textContent = text;
+  logList.appendChild(li);
+  logList.parentElement.scrollTop = logList.parentElement.scrollHeight;
+}
+function clearLog() {
+  logList.innerHTML = "";
+}
+function setControlsDisabled(disabled) {
+  inputX.disabled = disabled;
+  btnDrop.disabled = disabled;
+  btnClaim.disabled = disabled;
+}
+function updateMovesDisplay() {
+  movesValue.textContent = String(MAX_MOVES - state.moveCount);
+}
+function reveal(claimed) {
+  setControlsDisabled(true);
+  const win = checkWin(state);
+  drawGraph(state.moves);
+  revealLegend.forEach((el) => el.classList.remove("hidden"));
+  const cols = state.moves.map((m) => m.col).sort((a, b) => a - b);
+  const body = [
+    `Secret:  a = ${state.a.toFixed(2)},  b = ${state.b.toFixed(2)}`,
+    `Noise:   σ_η = ${state.sigmaEta.toFixed(2)},  σ_ε = ${state.sigmaEps.toFixed(2)}`,
+    `True columns (sorted): [${cols.join(", ")}]`,
+    `4-in-a-row: ${win ? "YES" : "NO"}`,
+    "",
+    !claimed ? "You ran out of moves without claiming. You lose." : win ? "You claimed and were RIGHT — you win!" : "You claimed but were WRONG — you lose."
+  ].join(`
+`);
+  overlayTitle.textContent = win && claimed ? "You Win!" : "Game Over";
+  overlayTitle.className = win && claimed ? "win" : "lose";
+  overlayBody.textContent = body;
+  overlay.classList.remove("hidden");
+}
+function startNewGame() {
+  state = createGame();
+  clearLog();
+  overlay.classList.add("hidden");
+  revealLegend.forEach((el) => el.classList.add("hidden"));
+  setControlsDisabled(false);
+  updateMovesDisplay();
+  statusMsg.textContent = "";
+  inputX.value = "";
+  inputX.focus();
+  drawGraph();
+}
+function dropPiece() {
+  const raw = inputX.value.trim();
+  const x = parseFloat(raw);
+  if (raw === "" || isNaN(x)) {
+    statusMsg.textContent = "Enter a valid number.";
+    inputX.focus();
+    return;
+  }
+  statusMsg.textContent = "";
+  const { observed, newState } = submitMove(state, x);
+  state = newState;
+  appendLog(`move ${state.moveCount}  x = ${x}  →  y ≈ ${observed.toFixed(2)}`);
+  updateMovesDisplay();
+  drawGraph();
+  inputX.value = "";
+  inputX.focus();
+  if (state.moveCount >= MAX_MOVES) {
+    reveal(false);
+  }
+}
+btnDrop.addEventListener("click", dropPiece);
+btnClaim.addEventListener("click", () => reveal(true));
+btnNewGame.addEventListener("click", startNewGame);
+btnOverlayNew.addEventListener("click", startNewGame);
+inputX.addEventListener("keydown", (e) => {
+  if (e.key === "Enter")
+    dropPiece();
+});
+var resizeTimer;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    const isRevealed = !overlay.classList.contains("hidden") || btnDrop.disabled;
+    drawGraph(isRevealed ? state.moves : null);
+  }, 80);
+});
+startNewGame();

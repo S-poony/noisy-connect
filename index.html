@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Noisy Connect</title>
+    <meta
+      name="description"
+      content="A single-player mathematical deduction game. Probe a hidden sinusoidal function through noise, then claim 4 consecutive integer columns to win."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <!-- ── Header ─────────────────────────────────────────── -->
+    <header id="header">
+      <div id="header-left">
+        <h1 id="title">Noisy Connect</h1>
+        <p id="formula" class="mono">y&nbsp;=&nbsp;a&thinsp;·&thinsp;sin(b&thinsp;·&thinsp;(x&thinsp;+&thinsp;η))&thinsp;+&thinsp;ε</p>
+      </div>
+      <button id="btn-new-game" aria-label="Start a new game">New Game</button>
+    </header>
+
+    <!-- ── Info bar ───────────────────────────────────────── -->
+    <div id="info-bar">
+      <span id="moves-left" class="mono">Moves left: <strong id="moves-value">20</strong>&thinsp;/&thinsp;20</span>
+      <span id="status-msg"></span>
+    </div>
+
+    <!-- ── Main graph ─────────────────────────────────────── -->
+    <main id="main-area">
+      <canvas id="graph" aria-label="Game graph showing noisy readouts and, after reveal, true column placements"></canvas>
+      <div id="graph-legend" aria-hidden="true">
+        <span class="legend-item"><span class="legend-dot noisy"></span>Noisy readout (x typed, y observed)</span>
+        <span class="legend-item reveal-only hidden"><span class="legend-dot true"></span>True placement (x typed, col)</span>
+      </div>
+    </main>
+
+    <!-- ── Controls ───────────────────────────────────────── -->
+    <section id="controls" aria-label="Game controls">
+      <label for="input-x" class="mono">x&nbsp;=</label>
+      <input
+        id="input-x"
+        type="number"
+        step="any"
+        placeholder="e.g. 1.5"
+        autocomplete="off"
+        aria-label="Enter x value"
+      />
+      <button id="btn-drop" aria-label="Drop piece at entered x">Drop Piece</button>
+      <button id="btn-claim" class="btn-accent" aria-label="Claim 4-in-a-row win">Claim Win →</button>
+    </section>
+
+    <!-- ── Log ────────────────────────────────────────────── -->
+    <section id="log-section" aria-label="Move log">
+      <ul id="log" class="mono" aria-live="polite" aria-relevant="additions"></ul>
+    </section>
+
+    <!-- ── Result overlay ────────────────────────────────── -->
+    <div id="overlay" class="hidden" role="dialog" aria-modal="true" aria-labelledby="overlay-title">
+      <div id="overlay-card">
+        <h2 id="overlay-title"></h2>
+        <p id="overlay-body" class="mono"></p>
+        <button id="btn-overlay-new" aria-label="Play again">Play Again</button>
+      </div>
+    </div>
+
+    <script type="module" src="./dist/main.js"></script>
+  </body>
+</html>

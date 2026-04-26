@@ -1,0 +1,274 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   style.css — Noisy Connect
+   White background, mathematical minimal aesthetic.
+   No keyframe animations. Only transition on interactive elements.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* ── Tokens ───────────────────────────────────────────────────────────────── */
+:root {
+  --bg:          #ffffff;
+  --text:        #111111;
+  --text-muted:  #666666;
+  --border:      #e5e7eb;
+  --accent:      #2563eb;
+  --accent-hover:#1d4ed8;
+  --dot-noisy:   #aaaaaa;
+  --dot-true:    #2563eb;
+  --win-color:   #16a34a;
+  --lose-color:  #dc2626;
+
+  --font-ui:     'Inter', system-ui, sans-serif;
+  --font-mono:   'JetBrains Mono', 'Fira Mono', monospace;
+
+  --radius:      4px;
+  --gap:         12px;
+}
+
+/* ── Reset ────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+
+body {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.mono { font-family: var(--font-mono); }
+.hidden { display: none !important; }
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
+#header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gap) 20px;
+  border-bottom: 1px solid var(--border);
+  gap: var(--gap);
+}
+
+#header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+#title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+
+#formula {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ── Info bar ─────────────────────────────────────────────────────────────── */
+#info-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 20px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text-muted);
+  gap: var(--gap);
+}
+
+#moves-value { color: var(--text); }
+
+#status-msg {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ── Main graph area ──────────────────────────────────────────────────────── */
+#main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px 8px;
+  min-height: 0;
+}
+
+#graph {
+  flex: 1;
+  width: 100%;
+  min-height: 200px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: block;
+  /* crisp pixel rendering on canvas */
+  image-rendering: pixelated;
+}
+
+#graph-legend {
+  display: flex;
+  gap: 20px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-dot.noisy { background: var(--dot-noisy); }
+.legend-dot.true  { background: var(--dot-true); }
+
+/* ── Controls ─────────────────────────────────────────────────────────────── */
+#controls {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  padding: 10px 20px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+#controls label {
+  font-size: 14px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+#input-x {
+  flex: 1;
+  min-width: 80px;
+  max-width: 160px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  transition: border-color 100ms;
+}
+
+#input-x:focus { border-color: var(--accent); }
+
+/* ── Buttons ──────────────────────────────────────────────────────────────── */
+button {
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 100ms, color 100ms, border-color 100ms;
+  white-space: nowrap;
+}
+
+/* Default: outlined */
+button:not(.btn-accent) {
+  background: var(--bg);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+button:not(.btn-accent):hover {
+  background: #eff6ff;
+}
+
+/* Accent: filled */
+.btn-accent {
+  background: var(--accent);
+  color: #ffffff;
+  border: 1px solid var(--accent);
+}
+
+.btn-accent:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Log ──────────────────────────────────────────────────────────────────── */
+#log-section {
+  border-top: 1px solid var(--border);
+  padding: 8px 20px;
+  max-height: 88px;
+  overflow-y: auto;
+}
+
+#log {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+#log li::before { content: "·  "; }
+
+/* ── Result overlay ───────────────────────────────────────────────────────── */
+#overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+#overlay-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 28px 32px;
+  max-width: 420px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+}
+
+#overlay-title {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+#overlay-title.win  { color: var(--win-color); }
+#overlay-title.lose { color: var(--lose-color); }
+
+#overlay-body {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-muted);
+  white-space: pre-line;
+}
+
+#btn-overlay-new {
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  #header-left { gap: 8px; }
+  #formula { display: none; }
+  #controls { gap: 8px; }
+  #input-x { max-width: 100%; }
+}
