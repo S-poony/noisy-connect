@@ -9,7 +9,7 @@ import {
   checkWin,
   type GameState,
   type MoveRecord,
-} from "./game.ts";
+} from "./game";
 
 // ── DOM refs ────────────────────────────────────────────────────────────────
 
