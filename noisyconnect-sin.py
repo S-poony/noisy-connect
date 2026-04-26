@@ -13,7 +13,7 @@ def yes_no(prompt):
 
 def play_one_game():
     # Randomise function parameters and noise levels for this game
-    a = random.uniform(4.0, 10.0)          # amplitude: 4 to 10
+    a = random.uniform(8.0, 16.0)          # amplitude: 8 to 16
     b = random.uniform(0.5, 2.0)           # frequency: 0.5 to 2
     sigma_eta = random.uniform(0.0, 3.0)   # input jitter
     sigma_eps = random.uniform(0.0, 3.0)   # output reading noise
