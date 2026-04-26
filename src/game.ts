@@ -56,10 +56,10 @@ export interface GameState {
 /** Create a new game with randomised secret parameters. */
 export function createGame(): GameState {
   return {
-    a: uniform(8.0, 16.0),         // amplitude: 8 to 16
-    b: uniform(0.5, 2.0),          // frequency: 0.5 to 2
-    sigmaEta: uniform(0.0, 3.0),   // input jitter
-    sigmaEps: uniform(0.0, 3.0),   // output reading noise
+    a: uniform(8.0, 16.0),         // amplitude, lower is easier for connect 4
+    b: uniform(0.1, 2.0),          // frequency
+    sigmaEta: uniform(0.0, 2.0),   // input jitter
+    sigmaEps: uniform(0.0, 2.0),   // output reading noise
     moves: [],
     moveCount: 0,
     claimed: false,
