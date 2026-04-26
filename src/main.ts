@@ -234,13 +234,10 @@ function reveal(claimed: boolean): void {
 
   const win = checkWin(state);
 
-  // Show true points on graph
-  drawGraph(state.moves);
-
   // Show legend item for true points
   revealLegend.forEach((el) => el.classList.remove("hidden"));
 
-  // Build overlay content
+  // Build content
   const cols = state.moves.map((m) => m.col).sort((a, b) => a - b);
   const body = [
     `Secret:  a = ${state.a.toFixed(2)},  b = ${state.b.toFixed(2)}`,
@@ -261,6 +258,9 @@ function reveal(claimed: boolean): void {
   controls.classList.add("hidden");
   logSection.classList.add("hidden");
   gameOverPanel.classList.remove("hidden");
+
+  // Redraw now that layout has shifted
+  drawGraph(state.moves);
 }
 
 // ── New game ─────────────────────────────────────────────────────────────────
@@ -323,16 +323,13 @@ inputX.addEventListener("keydown", (e) => {
 });
 
 // Redraw on resize (debounced)
-let resizeTimer: ReturnType<typeof setTimeout>;
-window.addEventListener("resize", () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => {
-    // Check if revealed
-    const isRevealed = !gameOverPanel.classList.contains("hidden") ||
-      btnDrop.disabled;
-    drawGraph(isRevealed ? state.moves : null);
-  }, 80);
+// Redraw on resize via ResizeObserver (more reliable for layout shifts)
+const resizeObserver = new ResizeObserver(() => {
+  // Check if revealed
+  const isRevealed = !gameOverPanel.classList.contains("hidden") || btnDrop.disabled;
+  drawGraph(isRevealed ? state.moves : null);
 });
+resizeObserver.observe(canvas);
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 
