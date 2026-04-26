@@ -221,48 +221,35 @@ button:disabled {
 
 #log li::before { content: "·  "; }
 
-/* ── Result overlay ───────────────────────────────────────────────────────── */
-#overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.88);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-}
-
-#overlay-card {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 28px 32px;
-  max-width: 420px;
-  width: 90%;
+/* ── Game Over Panel ──────────────────────────────────────────────────────── */
+#game-over-panel {
+  border-top: 1px solid var(--border);
+  padding: 16px 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  background: var(--bg);
 }
 
-#overlay-title {
-  font-size: 20px;
+#game-over-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#game-over-title {
+  font-size: 18px;
   font-weight: 600;
 }
 
-#overlay-title.win  { color: var(--win-color); }
-#overlay-title.lose { color: var(--lose-color); }
+#game-over-title.win  { color: var(--win-color); }
+#game-over-title.lose { color: var(--lose-color); }
 
-#overlay-body {
+#game-over-body {
   font-size: 13px;
-  line-height: 1.7;
+  line-height: 1.6;
   color: var(--text-muted);
   white-space: pre-line;
-}
-
-#btn-overlay-new {
-  align-self: flex-start;
-  margin-top: 4px;
 }
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */

@@ -22,10 +22,12 @@ const btnNewGame  = document.getElementById("btn-new-game") as HTMLButtonElement
 const movesValue  = document.getElementById("moves-value")  as HTMLElement;
 const statusMsg   = document.getElementById("status-msg")   as HTMLElement;
 const logList     = document.getElementById("log")          as HTMLUListElement;
-const overlay     = document.getElementById("overlay")      as HTMLElement;
-const overlayTitle= document.getElementById("overlay-title")as HTMLElement;
-const overlayBody = document.getElementById("overlay-body") as HTMLElement;
-const btnOverlayNew = document.getElementById("btn-overlay-new") as HTMLButtonElement;
+const controls    = document.getElementById("controls")     as HTMLElement;
+const logSection  = document.getElementById("log-section")  as HTMLElement;
+const gameOverPanel = document.getElementById("game-over-panel") as HTMLElement;
+const gameOverTitle = document.getElementById("game-over-title") as HTMLElement;
+const gameOverBody  = document.getElementById("game-over-body")  as HTMLElement;
+const btnGameOverNew= document.getElementById("btn-game-over-new") as HTMLButtonElement;
 const revealLegend = document.querySelectorAll<HTMLElement>(".reveal-only");
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -253,10 +255,12 @@ function reveal(claimed: boolean): void {
       : "You claimed but were WRONG — you lose.",
   ].join("\n");
 
-  overlayTitle.textContent = win && claimed ? "You Win!" : "Game Over";
-  overlayTitle.className   = win && claimed ? "win" : "lose";
-  overlayBody.textContent  = body;
-  overlay.classList.remove("hidden");
+  gameOverTitle.textContent = win && claimed ? "You Win!" : "Game Over";
+  gameOverTitle.className   = win && claimed ? "win" : "lose";
+  gameOverBody.textContent  = body;
+  controls.classList.add("hidden");
+  logSection.classList.add("hidden");
+  gameOverPanel.classList.remove("hidden");
 }
 
 // ── New game ─────────────────────────────────────────────────────────────────
@@ -264,7 +268,9 @@ function reveal(claimed: boolean): void {
 function startNewGame(): void {
   state = createGame();
   clearLog();
-  overlay.classList.add("hidden");
+  gameOverPanel.classList.add("hidden");
+  controls.classList.remove("hidden");
+  logSection.classList.remove("hidden");
   revealLegend.forEach((el) => el.classList.add("hidden"));
   setControlsDisabled(false);
   updateMovesDisplay();
@@ -310,7 +316,7 @@ btnClaim.addEventListener("click", () => reveal(true));
 
 btnNewGame.addEventListener("click", startNewGame);
 
-btnOverlayNew.addEventListener("click", startNewGame);
+btnGameOverNew.addEventListener("click", startNewGame);
 
 inputX.addEventListener("keydown", (e) => {
   if (e.key === "Enter") dropPiece();
@@ -322,7 +328,7 @@ window.addEventListener("resize", () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
     // Check if revealed
-    const isRevealed = !overlay.classList.contains("hidden") ||
+    const isRevealed = !gameOverPanel.classList.contains("hidden") ||
       btnDrop.disabled;
     drawGraph(isRevealed ? state.moves : null);
   }, 80);

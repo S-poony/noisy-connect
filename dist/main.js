@@ -55,10 +55,12 @@ var btnNewGame = document.getElementById("btn-new-game");
 var movesValue = document.getElementById("moves-value");
 var statusMsg = document.getElementById("status-msg");
 var logList = document.getElementById("log");
-var overlay = document.getElementById("overlay");
-var overlayTitle = document.getElementById("overlay-title");
-var overlayBody = document.getElementById("overlay-body");
-var btnOverlayNew = document.getElementById("btn-overlay-new");
+var controls = document.getElementById("controls");
+var logSection = document.getElementById("log-section");
+var gameOverPanel = document.getElementById("game-over-panel");
+var gameOverTitle = document.getElementById("game-over-title");
+var gameOverBody = document.getElementById("game-over-body");
+var btnGameOverNew = document.getElementById("btn-game-over-new");
 var revealLegend = document.querySelectorAll(".reveal-only");
 var state = createGame();
 var PADDING = { top: 20, right: 20, bottom: 36, left: 48 };
@@ -212,15 +214,19 @@ function reveal(claimed) {
     !claimed ? "You ran out of moves without claiming. You lose." : win ? "You claimed and were RIGHT — you win!" : "You claimed but were WRONG — you lose."
   ].join(`
 `);
-  overlayTitle.textContent = win && claimed ? "You Win!" : "Game Over";
-  overlayTitle.className = win && claimed ? "win" : "lose";
-  overlayBody.textContent = body;
-  overlay.classList.remove("hidden");
+  gameOverTitle.textContent = win && claimed ? "You Win!" : "Game Over";
+  gameOverTitle.className = win && claimed ? "win" : "lose";
+  gameOverBody.textContent = body;
+  controls.classList.add("hidden");
+  logSection.classList.add("hidden");
+  gameOverPanel.classList.remove("hidden");
 }
 function startNewGame() {
   state = createGame();
   clearLog();
-  overlay.classList.add("hidden");
+  gameOverPanel.classList.add("hidden");
+  controls.classList.remove("hidden");
+  logSection.classList.remove("hidden");
   revealLegend.forEach((el) => el.classList.add("hidden"));
   setControlsDisabled(false);
   updateMovesDisplay();
@@ -252,7 +258,7 @@ function dropPiece() {
 btnDrop.addEventListener("click", dropPiece);
 btnClaim.addEventListener("click", () => reveal(true));
 btnNewGame.addEventListener("click", startNewGame);
-btnOverlayNew.addEventListener("click", startNewGame);
+btnGameOverNew.addEventListener("click", startNewGame);
 inputX.addEventListener("keydown", (e) => {
   if (e.key === "Enter")
     dropPiece();
@@ -261,7 +267,7 @@ var resizeTimer;
 window.addEventListener("resize", () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
-    const isRevealed = !overlay.classList.contains("hidden") || btnDrop.disabled;
+    const isRevealed = !gameOverPanel.classList.contains("hidden") || btnDrop.disabled;
     drawGraph(isRevealed ? state.moves : null);
   }, 80);
 });

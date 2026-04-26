@@ -61,14 +61,14 @@
       <ul id="log" class="mono" aria-live="polite" aria-relevant="additions"></ul>
     </section>
 
-    <!-- ── Result overlay ────────────────────────────────── -->
-    <div id="overlay" class="hidden" role="dialog" aria-modal="true" aria-labelledby="overlay-title">
-      <div id="overlay-card">
-        <h2 id="overlay-title"></h2>
-        <p id="overlay-body" class="mono"></p>
-        <button id="btn-overlay-new" aria-label="Play again">Play Again</button>
+    <!-- ── Game Over Panel ────────────────────────────────── -->
+    <section id="game-over-panel" class="hidden" aria-label="Game over summary">
+      <div id="game-over-header">
+        <h2 id="game-over-title"></h2>
+        <button id="btn-game-over-new" class="btn-accent" aria-label="Play again">Play Again</button>
       </div>
-    </div>
+      <p id="game-over-body" class="mono"></p>
+    </section>
 
     <script type="module" src="./dist/main.js"></script>
   </body>
