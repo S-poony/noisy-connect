@@ -1,2 +1,291 @@
-var G=20;function d(J,Q){let B,q;do B=Math.random();while(B===0);q=Math.random();let z=Math.sqrt(-2*Math.log(B))*Math.cos(2*Math.PI*q);return J+Q*z}function L(J,Q){return Math.random()*(Q-J)+J}function P(){return{a:L(8,16),b:L(0.5,2),sigmaEta:L(0,3),sigmaEps:L(0,3),moves:[],moveCount:0,claimed:!1}}function y(J,Q){let{a:B,b:q,sigmaEta:z,sigmaEps:K}=J,Z=d(0,z),A=Q+Z,H=B*Math.sin(q*A),T=Math.round(H),k=d(0,K),U=H+k,E={x:Q,observed:U,col:T},h={...J,moves:[...J.moves,E],moveCount:J.moveCount+1};return{observed:U,col:T,newState:h}}function v(J){let Q=new Set(J.moves.map((B)=>B.col));return[...Q].some((B)=>[0,1,2,3].every((q)=>Q.has(B+q)))}var X=document.getElementById("graph"),j=X.getContext("2d"),W=document.getElementById("input-x"),D=document.getElementById("btn-drop"),c=document.getElementById("btn-claim"),Qj=document.getElementById("btn-new-game"),$j=document.getElementById("moves-value"),w=document.getElementById("status-msg"),_=document.getElementById("log"),n=document.getElementById("controls"),s=document.getElementById("log-section"),g=document.getElementById("game-over-panel"),p=document.getElementById("game-over-title"),qj=document.getElementById("game-over-body"),Bj=document.getElementById("btn-game-over-new"),i=document.querySelectorAll(".reveal-only"),F=P(),Y={top:20,right:20,bottom:36,left:48},zj=4,Fj=5,Kj="#aaaaaa",b="#2563eb",m="#e5e7eb",M="#999999",l="#cccccc",Vj="11px 'JetBrains Mono', monospace";function C(J,Q,B,q,z,K,Z,A){let H=Y.left+(J-B)/(q-B)*Z,T=Y.top+(K-Q)/(K-z)*A;return[H,T]}function o(J,Q=6){let B=J/Q,q=Math.pow(10,Math.floor(Math.log10(B))),z=B/q;if(z<=1)return q;if(z<=2)return 2*q;if(z<=5)return 5*q;return 10*q}function r(J,Q,B=0.12){let q=Q-J||2;return[J-q*B,Q+q*B]}function S(J=null){let Q=window.devicePixelRatio||1,B=X.getBoundingClientRect(),q=B.width,z=B.height;if(X.width!==Math.round(q*Q)||X.height!==Math.round(z*Q))X.width=Math.round(q*Q),X.height=Math.round(z*Q),j.scale(Q,Q);let K=q-Y.left-Y.right,Z=z-Y.top-Y.bottom;j.clearRect(0,0,q,z);let A=F.moves,H=A.map(($)=>$.x),T=A.map(($)=>$.observed);if(J)J.forEach(($)=>{H.push($.x),T.push($.col)});let[k,U]=H.length?r(Math.min(...H),Math.max(...H)):[-5,5],[E,h]=T.length?r(Math.min(...T),Math.max(...T)):[-12,12];k=Math.min(k,0),U=Math.max(U,0),E=Math.min(E,0),h=Math.max(h,0),j.save(),j.font=Vj,j.fillStyle=M,j.textAlign="right",j.textBaseline="middle";let I=o(h-E),jj=Math.ceil(E/I)*I;for(let $=jj;$<=h+0.000000001;$+=I){let[,V]=C(0,$,k,U,E,h,K,Z),f=Math.abs($)<0.000000001;j.strokeStyle=f?l:m,j.lineWidth=f?1.5:1,j.beginPath(),j.moveTo(Y.left,V),j.lineTo(Y.left+K,V),j.stroke(),j.fillText(Number.isInteger($)?String($):$.toFixed(1),Y.left-6,V)}j.textAlign="center",j.textBaseline="top";let N=o(U-k),Jj=Math.ceil(k/N)*N;for(let $=Jj;$<=U+0.000000001;$+=N){let[V]=C($,0,k,U,E,h,K,Z),f=Math.abs($)<0.000000001;j.strokeStyle=f?l:m,j.lineWidth=f?1.5:1,j.beginPath(),j.moveTo(V,Y.top),j.lineTo(V,Y.top+Z),j.stroke(),j.fillStyle=M,j.fillText(Number.isInteger($)?String($):$.toFixed(1),V,Y.top+Z+6)}if(j.restore(),A.forEach(($)=>{let[V,f]=C($.x,$.observed,k,U,E,h,K,Z);j.beginPath(),j.arc(V,f,zj,0,Math.PI*2),j.fillStyle=Kj,j.fill()}),J){j.save(),j.beginPath(),j.strokeStyle=b,j.lineWidth=2,j.globalAlpha=0.25,j.lineJoin="round";for(let $=0;$<=K;$++){let V=Y.left+$,f=k+$/K*(U-k),R=F.a*Math.sin(F.b*f),[,u]=C(f,R,k,U,E,h,K,Z);if($===0)j.moveTo(V,u);else j.lineTo(V,u)}j.stroke(),j.restore()}if(J)J.forEach(($)=>{let[V,f]=C($.x,$.col,k,U,E,h,K,Z),[,R]=C($.x,0,k,U,E,h,K,Z);j.beginPath(),j.moveTo(V,R),j.lineTo(V,f),j.strokeStyle=b,j.lineWidth=1,j.globalAlpha=0.4,j.stroke(),j.globalAlpha=1,j.beginPath(),j.arc(V,f,Fj,0,Math.PI*2),j.fillStyle=b,j.fill()})}function kj(J){let Q=document.createElement("li");Q.textContent=J,_.appendChild(Q),_.parentElement.scrollTop=_.parentElement.scrollHeight}function Uj(){_.innerHTML=""}function x(J){W.disabled=J,D.disabled=J,c.disabled=J}function a(){$j.textContent=String(G-F.moveCount)}function t(J){x(!0);let Q=v(F);i.forEach((z)=>z.classList.remove("hidden"));let B=F.moves.map((z)=>z.col).sort((z,K)=>z-K),q=[`Secret:  a = ${F.a.toFixed(2)},  b = ${F.b.toFixed(2)}`,`Noise:   σ_η = ${F.sigmaEta.toFixed(2)},  σ_ε = ${F.sigmaEps.toFixed(2)}`,`True columns (sorted): [${B.join(", ")}]`,`4-in-a-row: ${Q?"YES":"NO"}`,"",!J?"You ran out of moves without claiming. You lose.":Q?"You claimed and were RIGHT — you win!":"You claimed but were WRONG — you lose."].join(`
-`);p.textContent=Q&&J?"You Win!":"Game Over",p.className=Q&&J?"win":"lose",qj.textContent=q,n.classList.add("hidden"),s.classList.add("hidden"),g.classList.remove("hidden"),S(F.moves)}function O(){F=P(),Uj(),g.classList.add("hidden"),n.classList.remove("hidden"),s.classList.remove("hidden"),i.forEach((J)=>J.classList.add("hidden")),x(!1),a(),w.textContent="",W.value="",W.focus(),S()}function e(){let J=W.value.trim(),Q=parseFloat(J);if(J===""||isNaN(Q)){w.textContent="Enter a valid number.",W.focus();return}w.textContent="";let{observed:B,newState:q}=y(F,Q);if(F=q,kj(`move ${F.moveCount}  x = ${Q}  →  y ≈ ${B.toFixed(2)}`),a(),S(),W.value="",W.focus(),F.moveCount>=G)t(!1)}D.addEventListener("click",e);c.addEventListener("click",()=>t(!0));Qj.addEventListener("click",O);Bj.addEventListener("click",O);W.addEventListener("keydown",(J)=>{if(J.key==="Enter")e()});var fj=new ResizeObserver(()=>{let J=!g.classList.contains("hidden")||D.disabled;S(J?F.moves:null)});fj.observe(X);O();
+// src/game.ts
+var MAX_MOVES = 20;
+function gaussRandom(mean, sigma) {
+  let u1;
+  let u2;
+  do {
+    u1 = Math.random();
+  } while (u1 === 0);
+  u2 = Math.random();
+  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  return mean + sigma * z;
+}
+function uniform(a, b) {
+  return Math.random() * (b - a) + a;
+}
+function createGame() {
+  return {
+    a: uniform(8, 16),
+    b: uniform(0.5, 2),
+    sigmaEta: uniform(0, 3),
+    sigmaEps: uniform(0, 3),
+    moves: [],
+    moveCount: 0,
+    claimed: false
+  };
+}
+function submitMove(state, x) {
+  const { a, b, sigmaEta, sigmaEps } = state;
+  const eta = gaussRandom(0, sigmaEta);
+  const trueX = x + eta;
+  const trueF = a * Math.sin(b * trueX);
+  const col = Math.round(trueF);
+  const epsilon = gaussRandom(0, sigmaEps);
+  const observed = trueF + epsilon;
+  const record = { x, etaX: trueX, observed, col };
+  const newState = {
+    ...state,
+    moves: [...state.moves, record],
+    moveCount: state.moveCount + 1
+  };
+  return { observed, col, newState };
+}
+function checkWin(state) {
+  const occupied = new Set(state.moves.map((m) => m.col));
+  return [...occupied].some((c) => [0, 1, 2, 3].every((i) => occupied.has(c + i)));
+}
+
+// src/main.ts
+var canvas = document.getElementById("graph");
+var ctx = canvas.getContext("2d");
+var inputX = document.getElementById("input-x");
+var btnDrop = document.getElementById("btn-drop");
+var btnClaim = document.getElementById("btn-claim");
+var btnNewGame = document.getElementById("btn-new-game");
+var movesValue = document.getElementById("moves-value");
+var statusMsg = document.getElementById("status-msg");
+var logList = document.getElementById("log");
+var controls = document.getElementById("controls");
+var logSection = document.getElementById("log-section");
+var gameOverPanel = document.getElementById("game-over-panel");
+var gameOverTitle = document.getElementById("game-over-title");
+var gameOverBody = document.getElementById("game-over-body");
+var btnGameOverNew = document.getElementById("btn-game-over-new");
+var revealLegend = document.querySelectorAll(".reveal-only");
+var state = createGame();
+var PADDING = { top: 20, right: 20, bottom: 36, left: 48 };
+var DOT_R_NOISY = 4;
+var DOT_R_TRUE = 5;
+var COLOR_NOISY = "#aaaaaa";
+var COLOR_TRUE = "#2563eb";
+var COLOR_AXIS = "#e5e7eb";
+var COLOR_TICK = "#999999";
+var COLOR_ZERO = "#cccccc";
+var FONT_TICK = "11px 'JetBrains Mono', monospace";
+function toPixel(x, y, xMin, xMax, yMin, yMax, w, h) {
+  const px = PADDING.left + (x - xMin) / (xMax - xMin) * w;
+  const py = PADDING.top + (yMax - y) / (yMax - yMin) * h;
+  return [px, py];
+}
+function niceStep(range, targetTicks = 6) {
+  const rough = range / targetTicks;
+  const pow = Math.pow(10, Math.floor(Math.log10(rough)));
+  const norm = rough / pow;
+  if (norm <= 1)
+    return pow;
+  if (norm <= 2)
+    return 2 * pow;
+  if (norm <= 5)
+    return 5 * pow;
+  return 10 * pow;
+}
+function expand(min, max, margin = 0.12) {
+  const span = max - min || 2;
+  return [min - span * margin, max + span * margin];
+}
+function drawGraph(revealMoves = null) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const cssW = rect.width;
+  const cssH = rect.height;
+  if (canvas.width !== Math.round(cssW * dpr) || canvas.height !== Math.round(cssH * dpr)) {
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    ctx.scale(dpr, dpr);
+  }
+  const W = cssW - PADDING.left - PADDING.right;
+  const H = cssH - PADDING.top - PADDING.bottom;
+  ctx.clearRect(0, 0, cssW, cssH);
+  const noisyMoves = state.moves;
+  const allX = noisyMoves.map((m) => m.x);
+  const allY = noisyMoves.map((m) => m.observed);
+  if (revealMoves) {
+    revealMoves.forEach((m) => {
+      allX.push(m.etaX);
+      allY.push(m.col);
+    });
+  }
+  let [xMin, xMax] = allX.length ? expand(Math.min(...allX), Math.max(...allX)) : [-5, 5];
+  let [yMin, yMax] = allY.length ? expand(Math.min(...allY), Math.max(...allY)) : [-12, 12];
+  xMin = Math.min(xMin, 0);
+  xMax = Math.max(xMax, 0);
+  yMin = Math.min(yMin, 0);
+  yMax = Math.max(yMax, 0);
+  ctx.save();
+  ctx.font = FONT_TICK;
+  ctx.fillStyle = COLOR_TICK;
+  ctx.textAlign = "right";
+  ctx.textBaseline = "middle";
+  const yStep = niceStep(yMax - yMin);
+  const yStart = Math.ceil(yMin / yStep) * yStep;
+  for (let yv = yStart;yv <= yMax + 0.000000001; yv += yStep) {
+    const [, py] = toPixel(0, yv, xMin, xMax, yMin, yMax, W, H);
+    const isZero = Math.abs(yv) < 0.000000001;
+    ctx.strokeStyle = isZero ? COLOR_ZERO : COLOR_AXIS;
+    ctx.lineWidth = isZero ? 1.5 : 1;
+    ctx.beginPath();
+    ctx.moveTo(PADDING.left, py);
+    ctx.lineTo(PADDING.left + W, py);
+    ctx.stroke();
+    ctx.fillText(Number.isInteger(yv) ? String(yv) : yv.toFixed(1), PADDING.left - 6, py);
+  }
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  const xStep = niceStep(xMax - xMin);
+  const xStart = Math.ceil(xMin / xStep) * xStep;
+  for (let xv = xStart;xv <= xMax + 0.000000001; xv += xStep) {
+    const [px] = toPixel(xv, 0, xMin, xMax, yMin, yMax, W, H);
+    const isZero = Math.abs(xv) < 0.000000001;
+    ctx.strokeStyle = isZero ? COLOR_ZERO : COLOR_AXIS;
+    ctx.lineWidth = isZero ? 1.5 : 1;
+    ctx.beginPath();
+    ctx.moveTo(px, PADDING.top);
+    ctx.lineTo(px, PADDING.top + H);
+    ctx.stroke();
+    ctx.fillStyle = COLOR_TICK;
+    ctx.fillText(Number.isInteger(xv) ? String(xv) : xv.toFixed(1), px, PADDING.top + H + 6);
+  }
+  ctx.restore();
+  noisyMoves.forEach((m) => {
+    const [px, py] = toPixel(m.x, m.observed, xMin, xMax, yMin, yMax, W, H);
+    ctx.beginPath();
+    ctx.arc(px, py, DOT_R_NOISY, 0, Math.PI * 2);
+    ctx.fillStyle = COLOR_NOISY;
+    ctx.fill();
+  });
+  if (revealMoves) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.strokeStyle = COLOR_TRUE;
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.25;
+    ctx.lineJoin = "round";
+    for (let i = 0;i <= W; i++) {
+      const px = PADDING.left + i;
+      const x = xMin + i / W * (xMax - xMin);
+      const y = state.a * Math.sin(state.b * x);
+      const [, py] = toPixel(x, y, xMin, xMax, yMin, yMax, W, H);
+      if (i === 0)
+        ctx.moveTo(px, py);
+      else
+        ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+  if (revealMoves) {
+    revealMoves.forEach((m) => {
+      const [px, py] = toPixel(m.etaX, m.col, xMin, xMax, yMin, yMax, W, H);
+      const [, yZero] = toPixel(m.etaX, 0, xMin, xMax, yMin, yMax, W, H);
+      ctx.beginPath();
+      ctx.moveTo(px, yZero);
+      ctx.lineTo(px, py);
+      ctx.strokeStyle = COLOR_TRUE;
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.4;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      ctx.beginPath();
+      ctx.arc(px, py, DOT_R_TRUE, 0, Math.PI * 2);
+      ctx.fillStyle = COLOR_TRUE;
+      ctx.fill();
+    });
+  }
+}
+function appendLog(text) {
+  const li = document.createElement("li");
+  li.textContent = text;
+  logList.appendChild(li);
+  logList.parentElement.scrollTop = logList.parentElement.scrollHeight;
+}
+function clearLog() {
+  logList.innerHTML = "";
+}
+function setControlsDisabled(disabled) {
+  inputX.disabled = disabled;
+  btnDrop.disabled = disabled;
+  btnClaim.disabled = disabled;
+}
+function updateMovesDisplay() {
+  movesValue.textContent = String(MAX_MOVES - state.moveCount);
+}
+function reveal(claimed) {
+  setControlsDisabled(true);
+  const win = checkWin(state);
+  revealLegend.forEach((el) => el.classList.remove("hidden"));
+  const cols = state.moves.map((m) => m.col).sort((a, b) => a - b);
+  const body = [
+    `Secret:  a = ${state.a.toFixed(2)},  b = ${state.b.toFixed(2)}`,
+    `Noise:   σ_η = ${state.sigmaEta.toFixed(2)},  σ_ε = ${state.sigmaEps.toFixed(2)}`,
+    `True columns (sorted): [${cols.join(", ")}]`,
+    `4-in-a-row: ${win ? "YES" : "NO"}`,
+    "",
+    !claimed ? "You ran out of moves without claiming. You lose." : win ? "You claimed and were RIGHT — you win!" : "You claimed but were WRONG — you lose."
+  ].join(`
+`);
+  gameOverTitle.textContent = win && claimed ? "You Win!" : "Game Over";
+  gameOverTitle.className = win && claimed ? "win" : "lose";
+  gameOverBody.textContent = body;
+  controls.classList.add("hidden");
+  logSection.classList.add("hidden");
+  gameOverPanel.classList.remove("hidden");
+  drawGraph(state.moves);
+}
+function startNewGame() {
+  state = createGame();
+  clearLog();
+  gameOverPanel.classList.add("hidden");
+  controls.classList.remove("hidden");
+  logSection.classList.remove("hidden");
+  revealLegend.forEach((el) => el.classList.add("hidden"));
+  setControlsDisabled(false);
+  updateMovesDisplay();
+  statusMsg.textContent = "";
+  inputX.value = "";
+  inputX.focus();
+  drawGraph();
+}
+function dropPiece() {
+  const raw = inputX.value.trim();
+  const x = parseFloat(raw);
+  if (raw === "" || isNaN(x)) {
+    statusMsg.textContent = "Enter a valid number.";
+    inputX.focus();
+    return;
+  }
+  statusMsg.textContent = "";
+  const { observed, newState } = submitMove(state, x);
+  state = newState;
+  appendLog(`move ${state.moveCount}  x = ${x}  →  y ≈ ${observed.toFixed(2)}`);
+  updateMovesDisplay();
+  drawGraph();
+  inputX.value = "";
+  inputX.focus();
+  if (state.moveCount >= MAX_MOVES) {
+    reveal(false);
+  }
+}
+btnDrop.addEventListener("click", dropPiece);
+btnClaim.addEventListener("click", () => reveal(true));
+btnNewGame.addEventListener("click", startNewGame);
+btnGameOverNew.addEventListener("click", startNewGame);
+inputX.addEventListener("keydown", (e) => {
+  if (e.key === "Enter")
+    dropPiece();
+});
+var resizeObserver = new ResizeObserver(() => {
+  const isRevealed = !gameOverPanel.classList.contains("hidden") || btnDrop.disabled;
+  drawGraph(isRevealed ? state.moves : null);
+});
+resizeObserver.observe(canvas);
+startNewGame();

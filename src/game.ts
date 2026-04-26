@@ -29,6 +29,8 @@ export function uniform(a: number, b: number): number {
 export interface MoveRecord {
   /** Raw x value typed by the player. */
   x: number;
+  /** Jittered x value: x + eta. Used for reveal. */
+  etaX: number;
   /** Noisy readout shown to the player: trueF + epsilon. */
   observed: number;
   /** True column: round(a * sin(b * (x + eta))). Hidden until reveal. */
@@ -94,7 +96,7 @@ export function submitMove(state: GameState, x: number): MoveResult {
   // Observed — equivalent to Python: observed = true_f + epsilon
   const observed = trueF + epsilon;
 
-  const record: MoveRecord = { x, observed, col };
+  const record: MoveRecord = { x, etaX: trueX, observed, col };
   const newState: GameState = {
     ...state,
     moves: [...state.moves, record],
