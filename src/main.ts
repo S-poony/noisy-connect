@@ -177,6 +177,29 @@ function drawGraph(revealMoves: MoveRecord[] | null = null): void {
     ctx.fill();
   });
 
+  // ── Secret Curve (reveal only) ──────────────────────────────────────────
+  if (revealMoves) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.strokeStyle = COLOR_TRUE;
+    ctx.lineWidth   = 2;
+    ctx.globalAlpha = 0.25;
+    ctx.lineJoin    = "round";
+
+    for (let i = 0; i <= W; i++) {
+      const px = PADDING.left + i;
+      // Map px -> x data coord
+      const x  = xMin + (i / W) * (xMax - xMin);
+      const y  = state.a * Math.sin(state.b * x);
+      const [, py] = toPixel(x, y, xMin, xMax, yMin, yMax, W, H);
+
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
   // ── True placement dots (reveal only) ──────────────────────────────────────
   if (revealMoves) {
     revealMoves.forEach((m) => {

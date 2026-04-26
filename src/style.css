@@ -132,6 +132,14 @@ body {
 .legend-dot.noisy { background: var(--dot-noisy); }
 .legend-dot.true  { background: var(--dot-true); }
 
+.legend-line {
+  width: 16px;
+  height: 2px;
+  background: var(--dot-true);
+  opacity: 0.3;
+  flex-shrink: 0;
+}
+
 /* ── Controls ─────────────────────────────────────────────────────────────── */
 #controls {
   display: flex;
