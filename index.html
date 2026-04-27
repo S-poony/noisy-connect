@@ -23,7 +23,7 @@
         <h1 id="title">Noisy Connect</h1>
         <p id="formula" class="mono">y&nbsp;=&nbsp;a&thinsp;·&thinsp;sin(b&thinsp;·&thinsp;(x&thinsp;+&thinsp;η))&thinsp;+&thinsp;ε</p>
       </div>
-      <button id="btn-new-game" aria-label="Start a new game">New Game</button>
+      <button id="btn-rules" aria-label="Show game rules">Rules</button>
     </header>
 
     <!-- ── Info bar ───────────────────────────────────────── -->
@@ -87,6 +87,17 @@
       </div>
       <p id="game-over-body" class="mono"></p>
     </section>
+
+    <!-- ── Rules Modal ────────────────────────────────────── -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+      <div id="rules-modal" class="modal" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+        <button id="btn-close-modal" class="modal-close" aria-label="Close rules">&times;</button>
+        <div id="modal-content">
+          <!-- Content loaded from noisy_connect_rules.html -->
+          <div class="loading">Loading rules...</div>
+        </div>
+      </div>
+    </div>
 
     <script type="module" src="./dist/main.js"></script>
   </body>

@@ -19,7 +19,7 @@ const ctx         = canvas.getContext("2d")!;
 const inputX      = document.getElementById("input-x")     as HTMLInputElement;
 const btnDrop     = document.getElementById("btn-drop")     as HTMLButtonElement;
 const btnClaim    = document.getElementById("btn-claim")    as HTMLButtonElement;
-const btnNewGame  = document.getElementById("btn-new-game") as HTMLButtonElement;
+const btnRules    = document.getElementById("btn-rules")    as HTMLButtonElement;
 const movesValue  = document.getElementById("moves-value")  as HTMLElement;
 const statusMsg   = document.getElementById("status-msg")   as HTMLElement;
 const logList     = document.getElementById("log")          as HTMLUListElement;
@@ -35,6 +35,9 @@ const rangeMax     = document.getElementById("range-max")     as HTMLInputElemen
 const rangeSelection = document.getElementById("range-selection") as HTMLElement;
 const valMin       = document.getElementById("val-min")       as HTMLElement;
 const valMax       = document.getElementById("val-max")       as HTMLElement;
+const modalOverlay = document.getElementById("modal-overlay") as HTMLElement;
+const modalContent = document.getElementById("modal-content") as HTMLElement;
+const btnCloseModal= document.getElementById("btn-close-modal") as HTMLButtonElement;
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -345,6 +348,32 @@ function startNewGame(): void {
   drawGraph();
 }
 
+// ── Rules Modal ─────────────────────────────────────────────────────────────
+
+let rulesLoaded = false;
+
+async function openRules(): Promise<void> {
+  modalOverlay.classList.remove("hidden");
+  document.body.style.overflow = "hidden"; // Prevent scroll
+
+  if (!rulesLoaded) {
+    try {
+      const resp = await fetch("./public/noisy_connect_rules.html");
+      if (!resp.ok) throw new Error("Failed to load rules");
+      const html = await resp.text();
+      modalContent.innerHTML = html;
+      rulesLoaded = true;
+    } catch (err) {
+      modalContent.innerHTML = `<div class="error">Error loading rules: ${err}</div>`;
+    }
+  }
+}
+
+function closeRules(): void {
+  modalOverlay.classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
 // ── Drop piece ───────────────────────────────────────────────────────────────
 
 function dropPiece(): void {
@@ -379,7 +408,19 @@ btnDrop.addEventListener("click", dropPiece);
 
 btnClaim.addEventListener("click", () => reveal(true));
 
-btnNewGame.addEventListener("click", startNewGame);
+btnRules.addEventListener("click", openRules);
+
+modalOverlay.addEventListener("click", (e) => {
+  if (e.target === modalOverlay) closeRules();
+});
+
+btnCloseModal.addEventListener("click", closeRules);
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !modalOverlay.classList.contains("hidden")) {
+    closeRules();
+  }
+});
 
 btnGameOverNew.addEventListener("click", startNewGame);
 

@@ -74,7 +74,7 @@ var ctx = canvas.getContext("2d");
 var inputX = document.getElementById("input-x");
 var btnDrop = document.getElementById("btn-drop");
 var btnClaim = document.getElementById("btn-claim");
-var btnNewGame = document.getElementById("btn-new-game");
+var btnRules = document.getElementById("btn-rules");
 var movesValue = document.getElementById("moves-value");
 var statusMsg = document.getElementById("status-msg");
 var logList = document.getElementById("log");
@@ -90,6 +90,9 @@ var rangeMax = document.getElementById("range-max");
 var rangeSelection = document.getElementById("range-selection");
 var valMin = document.getElementById("val-min");
 var valMax = document.getElementById("val-max");
+var modalOverlay = document.getElementById("modal-overlay");
+var modalContent = document.getElementById("modal-content");
+var btnCloseModal = document.getElementById("btn-close-modal");
 var state = createGame();
 var viewXMin = parseFloat(rangeMin.value);
 var viewXMax = parseFloat(rangeMax.value);
@@ -318,6 +321,27 @@ function startNewGame() {
   inputX.focus();
   drawGraph();
 }
+var rulesLoaded = false;
+async function openRules() {
+  modalOverlay.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  if (!rulesLoaded) {
+    try {
+      const resp = await fetch("./public/noisy_connect_rules.html");
+      if (!resp.ok)
+        throw new Error("Failed to load rules");
+      const html = await resp.text();
+      modalContent.innerHTML = html;
+      rulesLoaded = true;
+    } catch (err) {
+      modalContent.innerHTML = `<div class="error">Error loading rules: ${err}</div>`;
+    }
+  }
+}
+function closeRules() {
+  modalOverlay.classList.add("hidden");
+  document.body.style.overflow = "";
+}
 function dropPiece() {
   const raw = inputX.value.trim();
   const x = parseFloat(raw);
@@ -340,7 +364,17 @@ function dropPiece() {
 }
 btnDrop.addEventListener("click", dropPiece);
 btnClaim.addEventListener("click", () => reveal(true));
-btnNewGame.addEventListener("click", startNewGame);
+btnRules.addEventListener("click", openRules);
+modalOverlay.addEventListener("click", (e) => {
+  if (e.target === modalOverlay)
+    closeRules();
+});
+btnCloseModal.addEventListener("click", closeRules);
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !modalOverlay.classList.contains("hidden")) {
+    closeRules();
+  }
+});
 btnGameOverNew.addEventListener("click", startNewGame);
 inputX.addEventListener("keydown", (e) => {
   if (e.key === "Enter")
