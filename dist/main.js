@@ -241,9 +241,9 @@ function drawGraph(revealMoves = null, winResult = null) {
       else if (isDiscarded)
         color = COLOR_DISCARDED;
       const [px, py] = toPixel(m.trueX, m.trueY, xMin, xMax, yMin, yMax, W, H);
-      const [, yZero] = toPixel(m.trueX, 0, xMin, xMax, yMin, yMax, W, H);
+      const [xZero] = toPixel(0, m.trueY, xMin, xMax, yMin, yMax, W, H);
       ctx.beginPath();
-      ctx.moveTo(px, yZero);
+      ctx.moveTo(xZero, py);
       ctx.lineTo(px, py);
       ctx.strokeStyle = color;
       ctx.lineWidth = isWin ? 2 : 1;

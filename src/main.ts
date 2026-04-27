@@ -229,11 +229,11 @@ function drawGraph(revealMoves: MoveRecord[] | null = null, winResult: WinResult
       else if (isDiscarded) color = COLOR_DISCARDED;
 
       const [px, py]   = toPixel(m.trueX, m.trueY, xMin, xMax, yMin, yMax, W, H);
-      const [, yZero]  = toPixel(m.trueX, 0,       xMin, xMax, yMin, yMax, W, H);
+      const [xZero]    = toPixel(0,       m.trueY, xMin, xMax, yMin, yMax, W, H);
 
-      // Thin vertical line from x-axis to dot
+      // Thin horizontal line from y-axis to dot
       ctx.beginPath();
-      ctx.moveTo(px, yZero);
+      ctx.moveTo(xZero, py);
       ctx.lineTo(px, py);
       ctx.strokeStyle = color;
       ctx.lineWidth   = isWin ? 2 : 1;
