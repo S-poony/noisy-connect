@@ -107,7 +107,8 @@ export function submitMove(state: GameState, x: number): MoveResult {
 }
 
 export interface WinResult {
-  winning: MoveRecord[];
+  isWin: boolean;
+  valid: MoveRecord[];
   discarded: MoveRecord[];
 }
 
@@ -116,34 +117,52 @@ export interface WinResult {
  * Require at least k pieces in a continuous interval of length at most W,
  * with no two pieces closer than d.
  */
-export function checkWin(state: GameState): WinResult | null {
+export function checkWin(state: GameState): WinResult {
   const k = 4;
   const W = 4;
   const d = 0.5;
 
   const sortedMoves = [...state.moves].sort((a, b) => a.trueY - b.trueY);
 
-  for (let i = 0; i <= sortedMoves.length - k; i++) {
+  let bestValid: MoveRecord[] = [];
+  let bestDiscarded: MoveRecord[] = [];
+
+  for (let i = 0; i < sortedMoves.length; i++) {
     const subset: MoveRecord[] = [sortedMoves[i]];
     const discarded: MoveRecord[] = [];
     let currentY = sortedMoves[i].trueY;
-    let maxFoundY = currentY;
 
     for (let j = i + 1; j < sortedMoves.length; j++) {
+      // Only consider points within the window W
+      if (sortedMoves[j].trueY - sortedMoves[i].trueY > W) {
+        break;
+      }
+
       if (sortedMoves[j].trueY - currentY >= d) {
         subset.push(sortedMoves[j]);
         currentY = sortedMoves[j].trueY;
-        maxFoundY = currentY;
-        if (subset.length === k) break;
+        if (subset.length === k) {
+          return { isWin: true, valid: subset, discarded };
+        }
       } else {
         discarded.push(sortedMoves[j]);
       }
     }
 
-    if (subset.length === k && maxFoundY - sortedMoves[i].trueY <= W) {
-      return { winning: subset, discarded };
+    // Score this attempt to find the "best failed attempt"
+    // Primary: Number of valid points kept
+    // Secondary: Number of discarded points (more discarded = tighter cluster)
+    // Note: If two windows have the exact same number of valid and discarded points, 
+    // the algorithm will simply keep the first one it found (the one with the lowest Y-coordinate). 
+    const isBetter = 
+      subset.length > bestValid.length ||
+      (subset.length === bestValid.length && discarded.length > bestDiscarded.length);
+
+    if (isBetter) {
+      bestValid = subset;
+      bestDiscarded = discarded;
     }
   }
 
-  return null;
+  return { isWin: false, valid: bestValid, discarded: bestDiscarded };
 }

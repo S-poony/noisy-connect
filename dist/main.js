@@ -45,27 +45,33 @@ function checkWin(state) {
   const W = 4;
   const d = 0.5;
   const sortedMoves = [...state.moves].sort((a, b) => a.trueY - b.trueY);
-  for (let i = 0;i <= sortedMoves.length - k; i++) {
+  let bestValid = [];
+  let bestDiscarded = [];
+  for (let i = 0;i < sortedMoves.length; i++) {
     const subset = [sortedMoves[i]];
     const discarded = [];
     let currentY = sortedMoves[i].trueY;
-    let maxFoundY = currentY;
     for (let j = i + 1;j < sortedMoves.length; j++) {
+      if (sortedMoves[j].trueY - sortedMoves[i].trueY > W) {
+        break;
+      }
       if (sortedMoves[j].trueY - currentY >= d) {
         subset.push(sortedMoves[j]);
         currentY = sortedMoves[j].trueY;
-        maxFoundY = currentY;
-        if (subset.length === k)
-          break;
+        if (subset.length === k) {
+          return { isWin: true, valid: subset, discarded };
+        }
       } else {
         discarded.push(sortedMoves[j]);
       }
     }
-    if (subset.length === k && maxFoundY - sortedMoves[i].trueY <= W) {
-      return { winning: subset, discarded };
+    const isBetter = subset.length > bestValid.length || subset.length === bestValid.length && discarded.length > bestDiscarded.length;
+    if (isBetter) {
+      bestValid = subset;
+      bestDiscarded = discarded;
     }
   }
-  return null;
+  return { isWin: false, valid: bestValid, discarded: bestDiscarded };
 }
 
 // src/main.ts
@@ -250,7 +256,7 @@ function drawGraph(revealMoves = null, winResult = null) {
       ctx.fill();
     };
     revealMoves.forEach((m) => {
-      const isWin = winResult && winResult.winning.includes(m);
+      const isWin = winResult && winResult.isWin && winResult.valid.includes(m);
       const isDiscarded = winResult && winResult.discarded.includes(m);
       if (!isWin && !isDiscarded)
         drawDot(m, "normal");
@@ -261,7 +267,7 @@ function drawGraph(revealMoves = null, winResult = null) {
         drawDot(m, "discarded");
     });
     revealMoves.forEach((m) => {
-      const isWin = winResult && winResult.winning.includes(m);
+      const isWin = winResult && winResult.isWin && winResult.valid.includes(m);
       if (isWin)
         drawDot(m, "winning");
     });
@@ -287,7 +293,7 @@ function updateMovesDisplay() {
 function reveal(claimed) {
   setControlsDisabled(true);
   const winResult = checkWin(state);
-  const win = winResult !== null;
+  const win = winResult.isWin;
   revealLegend.forEach((el) => el.classList.remove("hidden"));
   const trueYs = state.moves.map((m) => m.trueY).sort((a, b) => a - b);
   const body = [

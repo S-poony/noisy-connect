@@ -250,7 +250,7 @@ function drawGraph(revealMoves: MoveRecord[] | null = null, winResult: WinResult
 
     // Draw non-winning, non-discarded dots first
     revealMoves.forEach((m) => {
-      const isWin = winResult && winResult.winning.includes(m);
+      const isWin = winResult && winResult.isWin && winResult.valid.includes(m);
       const isDiscarded = winResult && winResult.discarded.includes(m);
       if (!isWin && !isDiscarded) drawDot(m, 'normal');
     });
@@ -263,7 +263,7 @@ function drawGraph(revealMoves: MoveRecord[] | null = null, winResult: WinResult
 
     // Draw winning dots on top
     revealMoves.forEach((m) => {
-      const isWin = winResult && winResult.winning.includes(m);
+      const isWin = winResult && winResult.isWin && winResult.valid.includes(m);
       if (isWin) drawDot(m, 'winning');
     });
   }
@@ -300,7 +300,7 @@ function reveal(claimed: boolean): void {
   setControlsDisabled(true);
 
   const winResult = checkWin(state);
-  const win = winResult !== null;
+  const win = winResult.isWin;
 
   // Show legend item for true points
   revealLegend.forEach((el) => el.classList.remove("hidden"));
