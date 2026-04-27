@@ -111,31 +111,31 @@ export function submitMove(state: GameState, x: number): MoveResult {
  * Require at least k pieces in a continuous interval of length at most W,
  * with no two pieces closer than d.
  */
-export function checkWin(state: GameState): boolean {
+export function checkWin(state: GameState): MoveRecord[] | null {
   const k = 4;
   const W = 4;
   const d = 0.5;
 
-  const sortedY = state.moves.map((m) => m.trueY).sort((a, b) => a - b);
+  const sortedMoves = [...state.moves].sort((a, b) => a.trueY - b.trueY);
 
-  for (let i = 0; i <= sortedY.length - k; i++) {
-    let count = 1;
-    let currentY = sortedY[i];
+  for (let i = 0; i <= sortedMoves.length - k; i++) {
+    const subset: MoveRecord[] = [sortedMoves[i]];
+    let currentY = sortedMoves[i].trueY;
     let maxFoundY = currentY;
 
-    for (let j = i + 1; j < sortedY.length; j++) {
-      if (sortedY[j] - currentY >= d) {
-        count++;
-        currentY = sortedY[j];
+    for (let j = i + 1; j < sortedMoves.length; j++) {
+      if (sortedMoves[j].trueY - currentY >= d) {
+        subset.push(sortedMoves[j]);
+        currentY = sortedMoves[j].trueY;
         maxFoundY = currentY;
-        if (count === k) break;
+        if (subset.length === k) break;
       }
     }
 
-    if (count === k && maxFoundY - sortedY[i] <= W) {
-      return true;
+    if (subset.length === k && maxFoundY - sortedMoves[i].trueY <= W) {
+      return subset;
     }
   }
 
-  return false;
+  return null;
 }

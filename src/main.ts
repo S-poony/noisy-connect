@@ -49,6 +49,7 @@ const DOT_R_TRUE  = 5;
 
 const COLOR_NOISY  = "#aaaaaa";
 const COLOR_TRUE   = "#2563eb";
+const COLOR_WIN    = "#10b981"; // emerald-500
 const COLOR_AXIS   = "#e5e7eb";
 const COLOR_TICK   = "#999999";
 const COLOR_ZERO   = "#cccccc";
@@ -89,7 +90,7 @@ function expand(min: number, max: number, margin = 0.12): [number, number] {
 
 // ── Canvas drawing ───────────────────────────────────────────────────────────
 
-function drawGraph(revealMoves: MoveRecord[] | null = null): void {
+function drawGraph(revealMoves: MoveRecord[] | null = null, winningMoves: MoveRecord[] | null = null): void {
   // DPR-aware sizing
   const dpr  = window.devicePixelRatio || 1;
   const rect  = canvas.getBoundingClientRect();
@@ -214,7 +215,7 @@ function drawGraph(revealMoves: MoveRecord[] | null = null): void {
 
   // ── True placement dots (reveal only) ──────────────────────────────────────
   if (revealMoves) {
-    revealMoves.forEach((m) => {
+    const drawDot = (m: MoveRecord, isWin: boolean) => {
       const [px, py]   = toPixel(m.trueX, m.trueY, xMin, xMax, yMin, yMax, W, H);
       const [, yZero]  = toPixel(m.trueX, 0,       xMin, xMax, yMin, yMax, W, H);
 
@@ -222,17 +223,29 @@ function drawGraph(revealMoves: MoveRecord[] | null = null): void {
       ctx.beginPath();
       ctx.moveTo(px, yZero);
       ctx.lineTo(px, py);
-      ctx.strokeStyle = COLOR_TRUE;
-      ctx.lineWidth   = 1;
-      ctx.globalAlpha = 0.4;
+      ctx.strokeStyle = isWin ? COLOR_WIN : COLOR_TRUE;
+      ctx.lineWidth   = isWin ? 2 : 1;
+      ctx.globalAlpha = isWin ? 0.8 : 0.4;
       ctx.stroke();
       ctx.globalAlpha = 1;
 
       // Dot
       ctx.beginPath();
-      ctx.arc(px, py, DOT_R_TRUE, 0, Math.PI * 2);
-      ctx.fillStyle = COLOR_TRUE;
+      ctx.arc(px, py, isWin ? DOT_R_TRUE + 1 : DOT_R_TRUE, 0, Math.PI * 2);
+      ctx.fillStyle = isWin ? COLOR_WIN : COLOR_TRUE;
       ctx.fill();
+    };
+
+    // Draw non-winning dots first
+    revealMoves.forEach((m) => {
+      const isWin = winningMoves && winningMoves.includes(m);
+      if (!isWin) drawDot(m, false);
+    });
+
+    // Draw winning dots on top
+    revealMoves.forEach((m) => {
+      const isWin = winningMoves && winningMoves.includes(m);
+      if (isWin) drawDot(m, true);
     });
   }
 }
@@ -267,7 +280,8 @@ function updateMovesDisplay(): void {
 function reveal(claimed: boolean): void {
   setControlsDisabled(true);
 
-  const win = checkWin(state);
+  const winSubset = checkWin(state);
+  const win = winSubset !== null;
 
   // Show legend item for true points
   revealLegend.forEach((el) => el.classList.remove("hidden"));
@@ -278,7 +292,7 @@ function reveal(claimed: boolean): void {
     `Secret:  a = ${state.a.toFixed(2)},  b = ${state.b.toFixed(2)}`,
     `Noise:   σ_η = ${state.sigmaEta.toFixed(2)},  σ_ε = ${state.sigmaEps.toFixed(2)}`,
     `True Y values (sorted): [${trueYs.map((y) => y.toFixed(2)).join(", ")}]`,
-    `Window Packing (k=5, W=5, d=0.5): ${win ? "YES" : "NO"}`,
+    `Window Packing (k=4, W=4, d=0.5): ${win ? "YES" : "NO"}`,
     "",
     !claimed
       ? "You ran out of moves without claiming. You lose."
@@ -295,7 +309,7 @@ function reveal(claimed: boolean): void {
   gameOverPanel.classList.remove("hidden");
 
   // Redraw now that layout has shifted
-  drawGraph(state.moves);
+  drawGraph(state.moves, winSubset);
 }
 
 // ── New game ─────────────────────────────────────────────────────────────────
@@ -382,7 +396,8 @@ function updateSliderUI(): void {
   rangeSelection.style.left  = `${left}%`;
   rangeSelection.style.width = `${right - left}%`;
 
-  drawGraph(gameOverPanel.classList.contains("hidden") ? null : state.moves);
+  const isRevealed = !gameOverPanel.classList.contains("hidden");
+  drawGraph(isRevealed ? state.moves : null, isRevealed ? checkWin(state) : null);
 }
 
 rangeMin.addEventListener("input", () => {
@@ -412,7 +427,7 @@ const resizeObserver = new ResizeObserver((entries) => {
     if (entry.target === canvas) {
       // Check if revealed
       const isRevealed = !gameOverPanel.classList.contains("hidden") || btnDrop.disabled;
-      drawGraph(isRevealed ? state.moves : null);
+      drawGraph(isRevealed ? state.moves : null, isRevealed ? checkWin(state) : null);
     }
   }
 });
