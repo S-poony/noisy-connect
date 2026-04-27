@@ -1,0 +1,135 @@
+<style>
+  .rule-card {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 1rem 1.25rem;
+    margin-bottom: 12px;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: var(--border-radius-md);
+    margin-bottom: 8px;
+  }
+
+  .tag-blue {
+    background: #E6F1FB;
+    color: #0C447C;
+  }
+
+  .tag-amber {
+    background: #FAEEDA;
+    color: #633806;
+  }
+
+  .tag-teal {
+    background: #E1F5EE;
+    color: #085041;
+  }
+
+  .tag-red {
+    background: #FCEBEB;
+    color: #791F1F;
+  }
+
+  h2.title {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    margin: 0 0 4px;
+  }
+
+  p.sub {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin: 0 0 16px;
+  }
+
+  p.body {
+    font-size: 14px;
+    color: var(--color-text-primary);
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  .dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .dot-blue {
+    background: #378ADD;
+  }
+
+  .dot-grey {
+    background: #888780;
+  }
+
+  .dot-red {
+    background: #E24B4A;
+  }
+
+  .win-box {
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-md);
+    padding: 10px 14px;
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.7;
+  }
+
+  .win-box strong {
+    font-weight: 500;
+    color: var(--color-text-primary);
+  }
+</style>
+
+<h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Noisy Connect —
+  how to play</h2>
+
+<h2 class="title">Noisy Connect</h2>
+<p class="sub">A game of precision under uncertainty</p>
+
+<div class="rule-card">
+  <div class="tag tag-blue">The setup</div>
+  <p class="body">There is a hidden sine wave. You don't know its amplitude or frequency. Each turn, you choose an x
+    value and place a piece on the wave. But two things go wrong:</p>
+  <ul style="font-size:14px;color:var(--color-text-primary);line-height:1.8;margin:8px 0 0;padding-left:20px;">
+    <li><span class="dot dot-grey"></span>Your <b style="font-weight:500">shaky hand</b> adds a small random wobble η to
+      your x — so the piece lands somewhere slightly off.</li>
+    <li><span class="dot dot-grey"></span>Your <b style="font-weight:500">blurry eyes</b> add a noise ε to what you see
+      — the y value shown (grey dot) is not the true value.</li>
+  </ul>
+</div>
+
+<div class="rule-card">
+  <div class="tag tag-teal">What you see vs. what is real</div>
+  <p class="body"><span class="dot dot-grey"></span><b style="font-weight:500">Grey dots</b> — what you observe each
+    turn (noisy). This is your only feedback while playing.<br><br><span class="dot dot-blue"></span><b
+      style="font-weight:500">Blue dots</b> — the true outputs. Hidden until you claim victory.</p>
+</div>
+
+<div class="rule-card">
+  <div class="tag tag-amber">How to win</div>
+  <p class="body">Claim victory when you believe you have a <b style="font-weight:500">Connect 4</b>: at least 4 true
+    outputs (blue dots) that satisfy both conditions:</p>
+  <div class="win-box">
+    <strong>1. Clustered</strong> — all 4 fit inside a y-axis window of height 4.<br>
+    <strong>2. Spread out</strong> — no two of the 4 are closer than 0.5 to each other.
+  </div>
+</div>
+
+<div class="rule-card">
+  <div class="tag tag-red">How to lose</div>
+  <p class="body">Claim victory too soon and the blue dots may not form a valid Connect 4. Any dots that violate the
+    spacing rule (too close together) are shown in <span style="color:#E24B4A;font-weight:500">red</span>.</p>
+</div>
