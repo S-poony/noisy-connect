@@ -98,20 +98,112 @@ body {
 }
 
 #graph {
+  width: 100%;
+  height: 100%;
+  display: block;
+  image-rendering: pixelated;
+}
+
+#canvas-container {
   flex: 1;
   width: 100%;
   min-height: 200px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  display: block;
-  /* crisp pixel rendering on canvas */
-  image-rendering: pixelated;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Range Slider ─────────────────────────────────────────────────────────── */
+#range-container {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.range-slider {
+  position: relative;
+  width: 100%;
+  height: 24px;
+  display: flex;
+  align-items: center;
+}
+
+#range-track {
+  position: absolute;
+  width: 100%;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+}
+
+#range-selection {
+  position: absolute;
+  height: 4px;
+  background: var(--accent);
+  opacity: 0.3;
+  border-radius: 2px;
+  z-index: 1;
+}
+
+.range-slider input[type="range"] {
+  position: absolute;
+  width: 100%;
+  height: 24px;
+  pointer-events: none;
+  -webkit-appearance: none;
+  appearance: none;
+  background: none;
+  outline: none;
+  margin: 0;
+  z-index: 2;
+}
+
+.range-slider input[type="range"]::-webkit-slider-thumb {
+  pointer-events: auto;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--accent);
+  cursor: pointer;
+  transition: transform 100ms, border-color 100ms;
+}
+
+.range-slider input[type="range"]::-moz-range-thumb {
+  pointer-events: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--accent);
+  cursor: pointer;
+  transition: transform 100ms, border-color 100ms;
+}
+
+.range-slider input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  border-color: var(--accent-hover);
+}
+
+.range-slider input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  border-color: var(--accent-hover);
+}
+
+#range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
 }
 
 #graph-legend {
   display: flex;
   gap: 20px;
-  margin-top: 6px;
+  margin-top: 12px;
   font-size: 12px;
   color: var(--text-muted);
 }

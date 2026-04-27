@@ -34,7 +34,24 @@
 
     <!-- ── Main graph ─────────────────────────────────────── -->
     <main id="main-area">
-      <canvas id="graph" aria-label="Game graph showing noisy readouts and, after reveal, true column placements"></canvas>
+      <div id="canvas-container">
+        <canvas id="graph" aria-label="Game graph showing noisy readouts and, after reveal, true column placements"></canvas>
+      </div>
+
+      <!-- Range Slider -->
+      <div id="range-container">
+        <div class="range-slider">
+          <div id="range-track"></div>
+          <div id="range-selection"></div>
+          <input type="range" id="range-min" min="-100" max="100" step="0.1" value="-15" aria-label="X-axis minimum">
+          <input type="range" id="range-max" min="-100" max="100" step="0.1" value="15" aria-label="X-axis maximum">
+        </div>
+        <div id="range-labels" class="mono">
+          <span id="val-min">-15.0</span>
+          <span id="val-max">15.0</span>
+        </div>
+      </div>
+
       <div id="graph-legend" aria-hidden="true">
         <span class="legend-item"><span class="legend-dot noisy"></span>Noisy readout (x typed, y observed)</span>
         <span class="legend-item reveal-only hidden"><span class="legend-dot true"></span>True placement (x typed, col)</span>

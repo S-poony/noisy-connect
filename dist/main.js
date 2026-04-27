@@ -16,9 +16,9 @@ function uniform(a, b) {
 function createGame() {
   return {
     a: uniform(8, 16),
-    b: uniform(0.5, 2),
-    sigmaEta: uniform(0, 3),
-    sigmaEps: uniform(0, 3),
+    b: uniform(0.1, 2),
+    sigmaEta: uniform(0, 2),
+    sigmaEps: uniform(0, 2),
     moves: [],
     moveCount: 0,
     claimed: false
@@ -32,7 +32,7 @@ function submitMove(state, x) {
   const col = Math.round(trueF);
   const epsilon = gaussRandom(0, sigmaEps);
   const observed = trueF + epsilon;
-  const record = { x, etaX: trueX, observed, col };
+  const record = { x, trueX, observed, col };
   const newState = {
     ...state,
     moves: [...state.moves, record],
@@ -62,7 +62,14 @@ var gameOverTitle = document.getElementById("game-over-title");
 var gameOverBody = document.getElementById("game-over-body");
 var btnGameOverNew = document.getElementById("btn-game-over-new");
 var revealLegend = document.querySelectorAll(".reveal-only");
+var rangeMin = document.getElementById("range-min");
+var rangeMax = document.getElementById("range-max");
+var rangeSelection = document.getElementById("range-selection");
+var valMin = document.getElementById("val-min");
+var valMax = document.getElementById("val-max");
 var state = createGame();
+var viewXMin = parseFloat(rangeMin.value);
+var viewXMax = parseFloat(rangeMax.value);
 var PADDING = { top: 20, right: 20, bottom: 36, left: 48 };
 var DOT_R_NOISY = 4;
 var DOT_R_TRUE = 5;
@@ -78,8 +85,12 @@ function toPixel(x, y, xMin, xMax, yMin, yMax, w, h) {
   return [px, py];
 }
 function niceStep(range, targetTicks = 6) {
+  if (range <= 0.000000000001 || isNaN(range))
+    return 1;
   const rough = range / targetTicks;
   const pow = Math.pow(10, Math.floor(Math.log10(rough)));
+  if (pow === 0 || !isFinite(pow))
+    return 1;
   const norm = rough / pow;
   if (norm <= 1)
     return pow;
@@ -111,14 +122,13 @@ function drawGraph(revealMoves = null) {
   const allY = noisyMoves.map((m) => m.observed);
   if (revealMoves) {
     revealMoves.forEach((m) => {
-      allX.push(m.etaX);
+      allX.push(m.trueX);
       allY.push(m.col);
     });
   }
-  let [xMin, xMax] = allX.length ? expand(Math.min(...allX), Math.max(...allX)) : [-5, 5];
+  const xMin = viewXMin;
+  const xMax = viewXMax;
   let [yMin, yMax] = allY.length ? expand(Math.min(...allY), Math.max(...allY)) : [-12, 12];
-  xMin = Math.min(xMin, 0);
-  xMax = Math.max(xMax, 0);
   yMin = Math.min(yMin, 0);
   yMax = Math.max(yMax, 0);
   ctx.save();
@@ -128,32 +138,36 @@ function drawGraph(revealMoves = null) {
   ctx.textBaseline = "middle";
   const yStep = niceStep(yMax - yMin);
   const yStart = Math.ceil(yMin / yStep) * yStep;
-  for (let yv = yStart;yv <= yMax + 0.000000001; yv += yStep) {
-    const [, py] = toPixel(0, yv, xMin, xMax, yMin, yMax, W, H);
-    const isZero = Math.abs(yv) < 0.000000001;
-    ctx.strokeStyle = isZero ? COLOR_ZERO : COLOR_AXIS;
-    ctx.lineWidth = isZero ? 1.5 : 1;
-    ctx.beginPath();
-    ctx.moveTo(PADDING.left, py);
-    ctx.lineTo(PADDING.left + W, py);
-    ctx.stroke();
-    ctx.fillText(Number.isInteger(yv) ? String(yv) : yv.toFixed(1), PADDING.left - 6, py);
+  if (yStep > 0 && isFinite(yStep)) {
+    for (let yv = yStart;yv <= yMax + 0.000000001; yv += yStep) {
+      const [, py] = toPixel(0, yv, xMin, xMax, yMin, yMax, W, H);
+      const isZero = Math.abs(yv) < 0.000000001;
+      ctx.strokeStyle = isZero ? COLOR_ZERO : COLOR_AXIS;
+      ctx.lineWidth = isZero ? 1.5 : 1;
+      ctx.beginPath();
+      ctx.moveTo(PADDING.left, py);
+      ctx.lineTo(PADDING.left + W, py);
+      ctx.stroke();
+      ctx.fillText(Number.isInteger(yv) ? String(yv) : yv.toFixed(1), PADDING.left - 6, py);
+    }
   }
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
   const xStep = niceStep(xMax - xMin);
   const xStart = Math.ceil(xMin / xStep) * xStep;
-  for (let xv = xStart;xv <= xMax + 0.000000001; xv += xStep) {
-    const [px] = toPixel(xv, 0, xMin, xMax, yMin, yMax, W, H);
-    const isZero = Math.abs(xv) < 0.000000001;
-    ctx.strokeStyle = isZero ? COLOR_ZERO : COLOR_AXIS;
-    ctx.lineWidth = isZero ? 1.5 : 1;
-    ctx.beginPath();
-    ctx.moveTo(px, PADDING.top);
-    ctx.lineTo(px, PADDING.top + H);
-    ctx.stroke();
-    ctx.fillStyle = COLOR_TICK;
-    ctx.fillText(Number.isInteger(xv) ? String(xv) : xv.toFixed(1), px, PADDING.top + H + 6);
+  if (xStep > 0 && isFinite(xStep)) {
+    for (let xv = xStart;xv <= xMax + 0.000000001; xv += xStep) {
+      const [px] = toPixel(xv, 0, xMin, xMax, yMin, yMax, W, H);
+      const isZero = Math.abs(xv) < 0.000000001;
+      ctx.strokeStyle = isZero ? COLOR_ZERO : COLOR_AXIS;
+      ctx.lineWidth = isZero ? 1.5 : 1;
+      ctx.beginPath();
+      ctx.moveTo(px, PADDING.top);
+      ctx.lineTo(px, PADDING.top + H);
+      ctx.stroke();
+      ctx.fillStyle = COLOR_TICK;
+      ctx.fillText(Number.isInteger(xv) ? String(xv) : xv.toFixed(1), px, PADDING.top + H + 6);
+    }
   }
   ctx.restore();
   noisyMoves.forEach((m) => {
@@ -185,8 +199,8 @@ function drawGraph(revealMoves = null) {
   }
   if (revealMoves) {
     revealMoves.forEach((m) => {
-      const [px, py] = toPixel(m.etaX, m.col, xMin, xMax, yMin, yMax, W, H);
-      const [, yZero] = toPixel(m.etaX, 0, xMin, xMax, yMin, yMax, W, H);
+      const [px, py] = toPixel(m.trueX, m.col, xMin, xMax, yMin, yMax, W, H);
+      const [, yZero] = toPixel(m.trueX, 0, xMin, xMax, yMin, yMax, W, H);
       ctx.beginPath();
       ctx.moveTo(px, yZero);
       ctx.lineTo(px, py);
@@ -283,9 +297,41 @@ inputX.addEventListener("keydown", (e) => {
   if (e.key === "Enter")
     dropPiece();
 });
-var resizeObserver = new ResizeObserver(() => {
-  const isRevealed = !gameOverPanel.classList.contains("hidden") || btnDrop.disabled;
-  drawGraph(isRevealed ? state.moves : null);
+function updateSliderUI() {
+  const min = parseFloat(rangeMin.value);
+  const max = parseFloat(rangeMax.value);
+  if (min >= max) {}
+  viewXMin = min;
+  viewXMax = max;
+  valMin.textContent = min.toFixed(1);
+  valMax.textContent = max.toFixed(1);
+  const totalRange = parseFloat(rangeMax.max) - parseFloat(rangeMax.min);
+  const left = (min - parseFloat(rangeMin.min)) / totalRange * 100;
+  const right = (max - parseFloat(rangeMin.min)) / totalRange * 100;
+  rangeSelection.style.left = `${left}%`;
+  rangeSelection.style.width = `${right - left}%`;
+  drawGraph(gameOverPanel.classList.contains("hidden") ? null : state.moves);
+}
+rangeMin.addEventListener("input", () => {
+  if (parseFloat(rangeMin.value) >= parseFloat(rangeMax.value)) {
+    rangeMin.value = String(parseFloat(rangeMax.value) - 0.1);
+  }
+  updateSliderUI();
+});
+rangeMax.addEventListener("input", () => {
+  if (parseFloat(rangeMax.value) <= parseFloat(rangeMin.value)) {
+    rangeMax.value = String(parseFloat(rangeMin.value) + 0.1);
+  }
+  updateSliderUI();
+});
+updateSliderUI();
+var resizeObserver = new ResizeObserver((entries) => {
+  for (const entry of entries) {
+    if (entry.target === canvas) {
+      const isRevealed = !gameOverPanel.classList.contains("hidden") || btnDrop.disabled;
+      drawGraph(isRevealed ? state.moves : null);
+    }
+  }
 });
 resizeObserver.observe(canvas);
 startNewGame();

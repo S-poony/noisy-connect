@@ -29,10 +29,17 @@ const gameOverTitle = document.getElementById("game-over-title") as HTMLElement;
 const gameOverBody  = document.getElementById("game-over-body")  as HTMLElement;
 const btnGameOverNew= document.getElementById("btn-game-over-new") as HTMLButtonElement;
 const revealLegend = document.querySelectorAll<HTMLElement>(".reveal-only");
+const rangeMin     = document.getElementById("range-min")     as HTMLInputElement;
+const rangeMax     = document.getElementById("range-max")     as HTMLInputElement;
+const rangeSelection = document.getElementById("range-selection") as HTMLElement;
+const valMin       = document.getElementById("val-min")       as HTMLElement;
+const valMax       = document.getElementById("val-max")       as HTMLElement;
 
 // ── State ────────────────────────────────────────────────────────────────────
 
 let state: GameState = createGame();
+let viewXMin = parseFloat(rangeMin.value);
+let viewXMax = parseFloat(rangeMax.value);
 
 // ── Graph constants ──────────────────────────────────────────────────────────
 
@@ -63,8 +70,10 @@ function toPixel(
 
 /** Nice tick step given a range and desired tick count. */
 function niceStep(range: number, targetTicks = 6): number {
+  if (range <= 1e-12 || isNaN(range)) return 1;
   const rough = range / targetTicks;
   const pow   = Math.pow(10, Math.floor(Math.log10(rough)));
+  if (pow === 0 || !isFinite(pow)) return 1;
   const norm  = rough / pow;
   if (norm <= 1)   return pow;
   if (norm <= 2)   return 2 * pow;
@@ -110,13 +119,12 @@ function drawGraph(revealMoves: MoveRecord[] | null = null): void {
     });
   }
 
-  // Default range when no data yet
-  let [xMin, xMax] = allX.length ? expand(Math.min(...allX), Math.max(...allX)) : [-5, 5];
-  let [yMin, yMax] = allY.length ? expand(Math.min(...allY), Math.max(...allY)) : [-12, 12];
+  // Use viewport from sliders
+  const xMin = viewXMin;
+  const xMax = viewXMax;
 
-  // Ensure 0 is always on screen
-  xMin = Math.min(xMin, 0);
-  xMax = Math.max(xMax, 0);
+  // Y range still auto-calculated or fixed
+  let [yMin, yMax] = allY.length ? expand(Math.min(...allY), Math.max(...allY)) : [-12, 12];
   yMin = Math.min(yMin, 0);
   yMax = Math.max(yMax, 0);
 
@@ -130,19 +138,21 @@ function drawGraph(revealMoves: MoveRecord[] | null = null): void {
   // Y ticks
   const yStep = niceStep(yMax - yMin);
   const yStart = Math.ceil(yMin / yStep) * yStep;
-  for (let yv = yStart; yv <= yMax + 1e-9; yv += yStep) {
-    const [, py] = toPixel(0, yv, xMin, xMax, yMin, yMax, W, H);
-    const isZero = Math.abs(yv) < 1e-9;
-    ctx.strokeStyle = isZero ? COLOR_ZERO : COLOR_AXIS;
-    ctx.lineWidth   = isZero ? 1.5 : 1;
-    ctx.beginPath();
-    ctx.moveTo(PADDING.left, py);
-    ctx.lineTo(PADDING.left + W, py);
-    ctx.stroke();
-    ctx.fillText(
-      Number.isInteger(yv) ? String(yv) : yv.toFixed(1),
-      PADDING.left - 6, py
-    );
+  if (yStep > 0 && isFinite(yStep)) {
+    for (let yv = yStart; yv <= yMax + 1e-9; yv += yStep) {
+      const [, py] = toPixel(0, yv, xMin, xMax, yMin, yMax, W, H);
+      const isZero = Math.abs(yv) < 1e-9;
+      ctx.strokeStyle = isZero ? COLOR_ZERO : COLOR_AXIS;
+      ctx.lineWidth   = isZero ? 1.5 : 1;
+      ctx.beginPath();
+      ctx.moveTo(PADDING.left, py);
+      ctx.lineTo(PADDING.left + W, py);
+      ctx.stroke();
+      ctx.fillText(
+        Number.isInteger(yv) ? String(yv) : yv.toFixed(1),
+        PADDING.left - 6, py
+      );
+    }
   }
 
   // X ticks
@@ -150,20 +160,22 @@ function drawGraph(revealMoves: MoveRecord[] | null = null): void {
   ctx.textBaseline = "top";
   const xStep  = niceStep(xMax - xMin);
   const xStart = Math.ceil(xMin / xStep) * xStep;
-  for (let xv = xStart; xv <= xMax + 1e-9; xv += xStep) {
-    const [px] = toPixel(xv, 0, xMin, xMax, yMin, yMax, W, H);
-    const isZero = Math.abs(xv) < 1e-9;
-    ctx.strokeStyle = isZero ? COLOR_ZERO : COLOR_AXIS;
-    ctx.lineWidth   = isZero ? 1.5 : 1;
-    ctx.beginPath();
-    ctx.moveTo(px, PADDING.top);
-    ctx.lineTo(px, PADDING.top + H);
-    ctx.stroke();
-    ctx.fillStyle = COLOR_TICK;
-    ctx.fillText(
-      Number.isInteger(xv) ? String(xv) : xv.toFixed(1),
-      px, PADDING.top + H + 6
-    );
+  if (xStep > 0 && isFinite(xStep)) {
+    for (let xv = xStart; xv <= xMax + 1e-9; xv += xStep) {
+      const [px] = toPixel(xv, 0, xMin, xMax, yMin, yMax, W, H);
+      const isZero = Math.abs(xv) < 1e-9;
+      ctx.strokeStyle = isZero ? COLOR_ZERO : COLOR_AXIS;
+      ctx.lineWidth   = isZero ? 1.5 : 1;
+      ctx.beginPath();
+      ctx.moveTo(px, PADDING.top);
+      ctx.lineTo(px, PADDING.top + H);
+      ctx.stroke();
+      ctx.fillStyle = COLOR_TICK;
+      ctx.fillText(
+        Number.isInteger(xv) ? String(xv) : xv.toFixed(1),
+        px, PADDING.top + H + 6
+      );
+    }
   }
 
   ctx.restore();
@@ -345,12 +357,64 @@ inputX.addEventListener("keydown", (e) => {
   if (e.key === "Enter") dropPiece();
 });
 
-// Redraw on resize (debounced)
-// Redraw on resize via ResizeObserver (more reliable for layout shifts)
-const resizeObserver = new ResizeObserver(() => {
-  // Check if revealed
-  const isRevealed = !gameOverPanel.classList.contains("hidden") || btnDrop.disabled;
-  drawGraph(isRevealed ? state.moves : null);
+// ── Slider logic ────────────────────────────────────────────────────────────
+
+function updateSliderUI(): void {
+  const min = parseFloat(rangeMin.value);
+  const max = parseFloat(rangeMax.value);
+
+  // Keep min < max
+  if (min >= max) {
+    // If min was changed, push max forward. If max was changed, push min back.
+    // We can check which one was focused, but simpler is just to prevent crossover.
+  }
+
+  viewXMin = min;
+  viewXMax = max;
+
+  valMin.textContent = min.toFixed(1);
+  valMax.textContent = max.toFixed(1);
+
+  // Update track selection highlight
+  const totalRange = parseFloat(rangeMax.max) - parseFloat(rangeMax.min);
+  const left = ((min - parseFloat(rangeMin.min)) / totalRange) * 100;
+  const right = ((max - parseFloat(rangeMin.min)) / totalRange) * 100;
+  rangeSelection.style.left  = `${left}%`;
+  rangeSelection.style.width = `${right - left}%`;
+
+  drawGraph(gameOverPanel.classList.contains("hidden") ? null : state.moves);
+}
+
+rangeMin.addEventListener("input", () => {
+  rangeMin.style.zIndex = "3";
+  rangeMax.style.zIndex = "2";
+  if (parseFloat(rangeMin.value) >= parseFloat(rangeMax.value)) {
+    rangeMin.value = String(parseFloat(rangeMax.value) - 0.1);
+  }
+  updateSliderUI();
+});
+
+rangeMax.addEventListener("input", () => {
+  rangeMax.style.zIndex = "3";
+  rangeMin.style.zIndex = "2";
+  if (parseFloat(rangeMax.value) <= parseFloat(rangeMin.value)) {
+    rangeMax.value = String(parseFloat(rangeMin.value) + 0.1);
+  }
+  updateSliderUI();
+});
+
+// Sync UI on init
+updateSliderUI();
+
+// Redraw on resize via ResizeObserver
+const resizeObserver = new ResizeObserver((entries) => {
+  for (const entry of entries) {
+    if (entry.target === canvas) {
+      // Check if revealed
+      const isRevealed = !gameOverPanel.classList.contains("hidden") || btnDrop.disabled;
+      drawGraph(isRevealed ? state.moves : null);
+    }
+  }
 });
 resizeObserver.observe(canvas);
 
