@@ -14,11 +14,17 @@ function uniform(a, b) {
   return Math.random() * (b - a) + a;
 }
 function createGame() {
+  const a = uniform(4, 10);
+  const b = uniform(0.1, 2);
+  const c = uniform(0.5, 2);
+  const sigmaEta = c / (Math.abs(a) * b);
+  const d = uniform(0.05, 0.2);
+  const sigmaEps = d * Math.abs(a);
   return {
-    a: uniform(4, 10),
-    b: uniform(0.1, 2),
-    sigmaEta: uniform(0, 2),
-    sigmaEps: uniform(0, 2),
+    a,
+    b,
+    sigmaEta,
+    sigmaEps,
     moves: [],
     moveCount: 0,
     claimed: false

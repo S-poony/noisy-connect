@@ -55,11 +55,22 @@ export interface GameState {
 
 /** Create a new game with randomised secret parameters. */
 export function createGame(): GameState {
+  const a = uniform(4.0, 10.0);         // amplitude
+  const b = uniform(0.1, 2.0);          // frequency
+
+  // Scale sigmaEta inversely with |a|*b to keep jitter-caused output noise roughly constant
+  const c = uniform(0.5, 2.0);
+  const sigmaEta = c / (Math.abs(a) * b);
+
+  // Scale sigmaEps proportional to |a| to keep reading noise relative to wave height
+  const d = uniform(0.05, 0.2);
+  const sigmaEps = d * Math.abs(a);
+
   return {
-    a: uniform(4.0, 10.0),         // amplitude
-    b: uniform(0.1, 2.0),          // frequency
-    sigmaEta: uniform(0.0, 2.0),   // input jitter
-    sigmaEps: uniform(0.0, 2.0),   // output reading noise
+    a,
+    b,
+    sigmaEta,
+    sigmaEps,
     moves: [],
     moveCount: 0,
     claimed: false,
