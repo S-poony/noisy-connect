@@ -106,12 +106,17 @@ export function submitMove(state: GameState, x: number): MoveResult {
   return { observed, trueY, newState };
 }
 
+export interface WinResult {
+  winning: MoveRecord[];
+  discarded: MoveRecord[];
+}
+
 /**
  * Check the "Window Packing" win condition.
  * Require at least k pieces in a continuous interval of length at most W,
  * with no two pieces closer than d.
  */
-export function checkWin(state: GameState): MoveRecord[] | null {
+export function checkWin(state: GameState): WinResult | null {
   const k = 4;
   const W = 4;
   const d = 0.5;
@@ -120,6 +125,7 @@ export function checkWin(state: GameState): MoveRecord[] | null {
 
   for (let i = 0; i <= sortedMoves.length - k; i++) {
     const subset: MoveRecord[] = [sortedMoves[i]];
+    const discarded: MoveRecord[] = [];
     let currentY = sortedMoves[i].trueY;
     let maxFoundY = currentY;
 
@@ -129,11 +135,13 @@ export function checkWin(state: GameState): MoveRecord[] | null {
         currentY = sortedMoves[j].trueY;
         maxFoundY = currentY;
         if (subset.length === k) break;
+      } else {
+        discarded.push(sortedMoves[j]);
       }
     }
 
     if (subset.length === k && maxFoundY - sortedMoves[i].trueY <= W) {
-      return subset;
+      return { winning: subset, discarded };
     }
   }
 

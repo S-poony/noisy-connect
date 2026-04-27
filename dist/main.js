@@ -1,2 +1,391 @@
-var u=20;function v(J,$){let q,K;do q=Math.random();while(q===0);K=Math.random();let V=Math.sqrt(-2*Math.log(q))*Math.cos(2*Math.PI*K);return J+$*V}function b(J,$){return Math.random()*($-J)+J}function y(){return{a:b(4,10),b:b(0.1,2),sigmaEta:b(0,2),sigmaEps:b(0,2),moves:[],moveCount:0,claimed:!1}}function c(J,$){let{a:q,b:K,sigmaEta:V,sigmaEps:z}=J,j=v(0,V),Z=$+j,T=q*Math.sin(K*Z),H=T,N=v(0,z),U=T+N,A={x:$,trueX:Z,observed:U,trueY:H},Y={...J,moves:[...J.moves,A],moveCount:J.moveCount+1};return{observed:U,trueY:H,newState:Y}}function D(J){let V=[...J.moves].sort((z,j)=>z.trueY-j.trueY);for(let z=0;z<=V.length-4;z++){let j=[V[z]],Z=V[z].trueY,T=Z;for(let H=z+1;H<V.length;H++)if(V[H].trueY-Z>=0.5){if(j.push(V[H]),Z=V[H].trueY,T=Z,j.length===4)break}if(j.length===4&&T-V[z].trueY<=4)return j}return null}var L=document.getElementById("graph"),Q=L.getContext("2d"),_=document.getElementById("input-x"),p=document.getElementById("btn-drop"),a=document.getElementById("btn-claim"),ZJ=document.getElementById("btn-new-game"),kJ=document.getElementById("moves-value"),g=document.getElementById("status-msg"),O=document.getElementById("log"),e=document.getElementById("controls"),JJ=document.getElementById("log-section"),w=document.getElementById("game-over-panel"),M=document.getElementById("game-over-title"),UJ=document.getElementById("game-over-body"),EJ=document.getElementById("btn-game-over-new"),QJ=document.querySelectorAll(".reveal-only"),h=document.getElementById("range-min"),X=document.getElementById("range-max"),o=document.getElementById("range-selection"),HJ=document.getElementById("val-min"),YJ=document.getElementById("val-max"),f=y(),$J=parseFloat(h.value),qJ=parseFloat(X.value),E={top:20,right:20,bottom:36,left:48},TJ=4,r=5,AJ="#aaaaaa",d="#2563eb",x="#10b981",s="#e5e7eb",i="#999999",n="#cccccc",hJ="11px 'JetBrains Mono', monospace";function G(J,$,q,K,V,z,j,Z){let T=E.left+(J-q)/(K-q)*j,H=E.top+(z-$)/(z-V)*Z;return[T,H]}function t(J,$=6){if(J<=0.000000000001||isNaN(J))return 1;let q=J/$,K=Math.pow(10,Math.floor(Math.log10(q)));if(K===0||!isFinite(K))return 1;let V=q/K;if(V<=1)return K;if(V<=2)return 2*K;if(V<=5)return 5*K;return 10*K}function XJ(J,$,q=0.12){let K=$-J||2;return[J-K*q,$+K*q]}function S(J=null,$=null){let q=window.devicePixelRatio||1,K=L.getBoundingClientRect(),V=K.width,z=K.height;if(L.width!==Math.round(V*q)||L.height!==Math.round(z*q))L.width=Math.round(V*q),L.height=Math.round(z*q),Q.scale(q,q);let j=V-E.left-E.right,Z=z-E.top-E.bottom;Q.clearRect(0,0,V,z);let T=f.moves,H=T.map((B)=>B.x),N=T.map((B)=>B.observed);if(J)J.forEach((B)=>{H.push(B.trueX),N.push(B.trueY)});let U=$J,A=qJ,[Y,C]=N.length?XJ(Math.min(...N),Math.max(...N)):[-12,12];Y=Math.min(Y,0),C=Math.max(C,0),Q.save(),Q.font=hJ,Q.fillStyle=i,Q.textAlign="right",Q.textBaseline="middle";let I=t(C-Y),jJ=Math.ceil(Y/I)*I;if(I>0&&isFinite(I))for(let B=jJ;B<=C+0.000000001;B+=I){let[,F]=G(0,B,U,A,Y,C,j,Z),k=Math.abs(B)<0.000000001;Q.strokeStyle=k?n:s,Q.lineWidth=k?1.5:1,Q.beginPath(),Q.moveTo(E.left,F),Q.lineTo(E.left+j,F),Q.stroke(),Q.fillText(Number.isInteger(B)?String(B):B.toFixed(1),E.left-6,F)}Q.textAlign="center",Q.textBaseline="top";let P=t(A-U),FJ=Math.ceil(U/P)*P;if(P>0&&isFinite(P))for(let B=FJ;B<=A+0.000000001;B+=P){let[F]=G(B,0,U,A,Y,C,j,Z),k=Math.abs(B)<0.000000001;Q.strokeStyle=k?n:s,Q.lineWidth=k?1.5:1,Q.beginPath(),Q.moveTo(F,E.top),Q.lineTo(F,E.top+Z),Q.stroke(),Q.fillStyle=i,Q.fillText(Number.isInteger(B)?String(B):B.toFixed(1),F,E.top+Z+6)}if(Q.restore(),T.forEach((B)=>{let[F,k]=G(B.x,B.observed,U,A,Y,C,j,Z);Q.beginPath(),Q.arc(F,k,TJ,0,Math.PI*2),Q.fillStyle=AJ,Q.fill()}),J){Q.save(),Q.beginPath(),Q.strokeStyle=d,Q.lineWidth=2,Q.globalAlpha=0.25,Q.lineJoin="round";for(let B=0;B<=j;B++){let F=E.left+B,k=U+B/j*(A-U),W=f.a*Math.sin(f.b*k),[,R]=G(k,W,U,A,Y,C,j,Z);if(B===0)Q.moveTo(F,R);else Q.lineTo(F,R)}Q.stroke(),Q.restore()}if(J){let B=(F,k)=>{let[W,R]=G(F.trueX,F.trueY,U,A,Y,C,j,Z),[,fJ]=G(F.trueX,0,U,A,Y,C,j,Z);Q.beginPath(),Q.moveTo(W,fJ),Q.lineTo(W,R),Q.strokeStyle=k?x:d,Q.lineWidth=k?2:1,Q.globalAlpha=k?0.8:0.4,Q.stroke(),Q.globalAlpha=1,Q.beginPath(),Q.arc(W,R,k?r+1:r,0,Math.PI*2),Q.fillStyle=k?x:d,Q.fill()};J.forEach((F)=>{if(!($&&$.includes(F)))B(F,!1)}),J.forEach((F)=>{if($&&$.includes(F))B(F,!0)})}}function CJ(J){let $=document.createElement("li");$.textContent=J,O.appendChild($),O.parentElement.scrollTop=O.parentElement.scrollHeight}function LJ(){O.innerHTML=""}function BJ(J){_.disabled=J,p.disabled=J,a.disabled=J}function zJ(){kJ.textContent=String(u-f.moveCount)}function KJ(J){BJ(!0);let $=D(f),q=$!==null;QJ.forEach((z)=>z.classList.remove("hidden"));let K=f.moves.map((z)=>z.trueY).sort((z,j)=>z-j),V=[`Secret:  a = ${f.a.toFixed(2)},  b = ${f.b.toFixed(2)}`,`Noise:   σ_η = ${f.sigmaEta.toFixed(2)},  σ_ε = ${f.sigmaEps.toFixed(2)}`,`True Y values (sorted): [${K.map((z)=>z.toFixed(2)).join(", ")}]`,`Window Packing (k=5, W=5, d=0.5): ${q?"YES":"NO"}`,"",!J?"You ran out of moves without claiming. You lose.":q?"You claimed and were RIGHT — you win!":"You claimed but were WRONG — you lose."].join(`
-`);M.textContent=q&&J?"You Win!":"Game Over",M.className=q&&J?"win":"lose",UJ.textContent=V,e.classList.add("hidden"),JJ.classList.add("hidden"),w.classList.remove("hidden"),S(f.moves,$)}function m(){f=y(),LJ(),w.classList.add("hidden"),e.classList.remove("hidden"),JJ.classList.remove("hidden"),QJ.forEach((J)=>J.classList.add("hidden")),BJ(!1),zJ(),g.textContent="",_.value="",_.focus(),S()}function VJ(){let J=_.value.trim(),$=parseFloat(J);if(J===""||isNaN($)){g.textContent="Enter a valid number.",_.focus();return}g.textContent="";let{observed:q,newState:K}=c(f,$);if(f=K,CJ(`move ${f.moveCount}  x = ${$}  →  y ≈ ${q.toFixed(2)}`),zJ(),S(),_.value="",_.focus(),f.moveCount>=u)KJ(!1)}p.addEventListener("click",VJ);a.addEventListener("click",()=>KJ(!0));ZJ.addEventListener("click",m);EJ.addEventListener("click",m);_.addEventListener("keydown",(J)=>{if(J.key==="Enter")VJ()});function l(){let J=parseFloat(h.value),$=parseFloat(X.value);if(J>=$);$J=J,qJ=$,HJ.textContent=J.toFixed(1),YJ.textContent=$.toFixed(1);let q=parseFloat(X.max)-parseFloat(X.min),K=(J-parseFloat(h.min))/q*100,V=($-parseFloat(h.min))/q*100;o.style.left=`${K}%`,o.style.width=`${V-K}%`;let z=!w.classList.contains("hidden");S(z?f.moves:null,z?D(f):null)}h.addEventListener("input",()=>{if(h.style.zIndex="3",X.style.zIndex="2",parseFloat(h.value)>=parseFloat(X.value))h.value=String(parseFloat(X.value)-0.1);l()});X.addEventListener("input",()=>{if(X.style.zIndex="3",h.style.zIndex="2",parseFloat(X.value)<=parseFloat(h.value))X.value=String(parseFloat(h.value)+0.1);l()});l();var _J=new ResizeObserver((J)=>{for(let $ of J)if($.target===L){let q=!w.classList.contains("hidden")||p.disabled;S(q?f.moves:null,q?D(f):null)}});_J.observe(L);m();
+// src/game.ts
+var MAX_MOVES = 20;
+function gaussRandom(mean, sigma) {
+  let u1;
+  let u2;
+  do {
+    u1 = Math.random();
+  } while (u1 === 0);
+  u2 = Math.random();
+  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  return mean + sigma * z;
+}
+function uniform(a, b) {
+  return Math.random() * (b - a) + a;
+}
+function createGame() {
+  return {
+    a: uniform(4, 10),
+    b: uniform(0.1, 2),
+    sigmaEta: uniform(0, 2),
+    sigmaEps: uniform(0, 2),
+    moves: [],
+    moveCount: 0,
+    claimed: false
+  };
+}
+function submitMove(state, x) {
+  const { a, b, sigmaEta, sigmaEps } = state;
+  const eta = gaussRandom(0, sigmaEta);
+  const trueX = x + eta;
+  const trueF = a * Math.sin(b * trueX);
+  const trueY = trueF;
+  const epsilon = gaussRandom(0, sigmaEps);
+  const observed = trueF + epsilon;
+  const record = { x, trueX, observed, trueY };
+  const newState = {
+    ...state,
+    moves: [...state.moves, record],
+    moveCount: state.moveCount + 1
+  };
+  return { observed, trueY, newState };
+}
+function checkWin(state) {
+  const k = 4;
+  const W = 4;
+  const d = 0.5;
+  const sortedMoves = [...state.moves].sort((a, b) => a.trueY - b.trueY);
+  for (let i = 0;i <= sortedMoves.length - k; i++) {
+    const subset = [sortedMoves[i]];
+    const discarded = [];
+    let currentY = sortedMoves[i].trueY;
+    let maxFoundY = currentY;
+    for (let j = i + 1;j < sortedMoves.length; j++) {
+      if (sortedMoves[j].trueY - currentY >= d) {
+        subset.push(sortedMoves[j]);
+        currentY = sortedMoves[j].trueY;
+        maxFoundY = currentY;
+        if (subset.length === k)
+          break;
+      } else {
+        discarded.push(sortedMoves[j]);
+      }
+    }
+    if (subset.length === k && maxFoundY - sortedMoves[i].trueY <= W) {
+      return { winning: subset, discarded };
+    }
+  }
+  return null;
+}
+
+// src/main.ts
+var canvas = document.getElementById("graph");
+var ctx = canvas.getContext("2d");
+var inputX = document.getElementById("input-x");
+var btnDrop = document.getElementById("btn-drop");
+var btnClaim = document.getElementById("btn-claim");
+var btnNewGame = document.getElementById("btn-new-game");
+var movesValue = document.getElementById("moves-value");
+var statusMsg = document.getElementById("status-msg");
+var logList = document.getElementById("log");
+var controls = document.getElementById("controls");
+var logSection = document.getElementById("log-section");
+var gameOverPanel = document.getElementById("game-over-panel");
+var gameOverTitle = document.getElementById("game-over-title");
+var gameOverBody = document.getElementById("game-over-body");
+var btnGameOverNew = document.getElementById("btn-game-over-new");
+var revealLegend = document.querySelectorAll(".reveal-only");
+var rangeMin = document.getElementById("range-min");
+var rangeMax = document.getElementById("range-max");
+var rangeSelection = document.getElementById("range-selection");
+var valMin = document.getElementById("val-min");
+var valMax = document.getElementById("val-max");
+var state = createGame();
+var viewXMin = parseFloat(rangeMin.value);
+var viewXMax = parseFloat(rangeMax.value);
+var PADDING = { top: 20, right: 20, bottom: 36, left: 48 };
+var DOT_R_NOISY = 4;
+var DOT_R_TRUE = 5;
+var COLOR_NOISY = "#aaaaaa";
+var COLOR_TRUE = "#2563eb";
+var COLOR_WIN = "#10b981";
+var COLOR_DISCARDED = "#ef4444";
+var COLOR_AXIS = "#e5e7eb";
+var COLOR_TICK = "#999999";
+var COLOR_ZERO = "#cccccc";
+var FONT_TICK = "11px 'JetBrains Mono', monospace";
+function toPixel(x, y, xMin, xMax, yMin, yMax, w, h) {
+  const px = PADDING.left + (x - xMin) / (xMax - xMin) * w;
+  const py = PADDING.top + (yMax - y) / (yMax - yMin) * h;
+  return [px, py];
+}
+function niceStep(range, targetTicks = 6) {
+  if (range <= 0.000000000001 || isNaN(range))
+    return 1;
+  const rough = range / targetTicks;
+  const pow = Math.pow(10, Math.floor(Math.log10(rough)));
+  if (pow === 0 || !isFinite(pow))
+    return 1;
+  const norm = rough / pow;
+  if (norm <= 1)
+    return pow;
+  if (norm <= 2)
+    return 2 * pow;
+  if (norm <= 5)
+    return 5 * pow;
+  return 10 * pow;
+}
+function expand(min, max, margin = 0.12) {
+  const span = max - min || 2;
+  return [min - span * margin, max + span * margin];
+}
+function drawGraph(revealMoves = null, winResult = null) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const cssW = rect.width;
+  const cssH = rect.height;
+  if (canvas.width !== Math.round(cssW * dpr) || canvas.height !== Math.round(cssH * dpr)) {
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    ctx.scale(dpr, dpr);
+  }
+  const W = cssW - PADDING.left - PADDING.right;
+  const H = cssH - PADDING.top - PADDING.bottom;
+  ctx.clearRect(0, 0, cssW, cssH);
+  const noisyMoves = state.moves;
+  const allX = noisyMoves.map((m) => m.x);
+  const allY = noisyMoves.map((m) => m.observed);
+  if (revealMoves) {
+    revealMoves.forEach((m) => {
+      allX.push(m.trueX);
+      allY.push(m.trueY);
+    });
+  }
+  const xMin = viewXMin;
+  const xMax = viewXMax;
+  let [yMin, yMax] = allY.length ? expand(Math.min(...allY), Math.max(...allY)) : [-12, 12];
+  yMin = Math.min(yMin, 0);
+  yMax = Math.max(yMax, 0);
+  ctx.save();
+  ctx.font = FONT_TICK;
+  ctx.fillStyle = COLOR_TICK;
+  ctx.textAlign = "right";
+  ctx.textBaseline = "middle";
+  const yStep = niceStep(yMax - yMin);
+  const yStart = Math.ceil(yMin / yStep) * yStep;
+  if (yStep > 0 && isFinite(yStep)) {
+    for (let yv = yStart;yv <= yMax + 0.000000001; yv += yStep) {
+      const [, py] = toPixel(0, yv, xMin, xMax, yMin, yMax, W, H);
+      const isZero = Math.abs(yv) < 0.000000001;
+      ctx.strokeStyle = isZero ? COLOR_ZERO : COLOR_AXIS;
+      ctx.lineWidth = isZero ? 1.5 : 1;
+      ctx.beginPath();
+      ctx.moveTo(PADDING.left, py);
+      ctx.lineTo(PADDING.left + W, py);
+      ctx.stroke();
+      ctx.fillText(Number.isInteger(yv) ? String(yv) : yv.toFixed(1), PADDING.left - 6, py);
+    }
+  }
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  const xStep = niceStep(xMax - xMin);
+  const xStart = Math.ceil(xMin / xStep) * xStep;
+  if (xStep > 0 && isFinite(xStep)) {
+    for (let xv = xStart;xv <= xMax + 0.000000001; xv += xStep) {
+      const [px] = toPixel(xv, 0, xMin, xMax, yMin, yMax, W, H);
+      const isZero = Math.abs(xv) < 0.000000001;
+      ctx.strokeStyle = isZero ? COLOR_ZERO : COLOR_AXIS;
+      ctx.lineWidth = isZero ? 1.5 : 1;
+      ctx.beginPath();
+      ctx.moveTo(px, PADDING.top);
+      ctx.lineTo(px, PADDING.top + H);
+      ctx.stroke();
+      ctx.fillStyle = COLOR_TICK;
+      ctx.fillText(Number.isInteger(xv) ? String(xv) : xv.toFixed(1), px, PADDING.top + H + 6);
+    }
+  }
+  ctx.restore();
+  noisyMoves.forEach((m) => {
+    const [px, py] = toPixel(m.x, m.observed, xMin, xMax, yMin, yMax, W, H);
+    ctx.beginPath();
+    ctx.arc(px, py, DOT_R_NOISY, 0, Math.PI * 2);
+    ctx.fillStyle = COLOR_NOISY;
+    ctx.fill();
+  });
+  if (revealMoves) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.strokeStyle = COLOR_TRUE;
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.25;
+    ctx.lineJoin = "round";
+    for (let i = 0;i <= W; i++) {
+      const px = PADDING.left + i;
+      const x = xMin + i / W * (xMax - xMin);
+      const y = state.a * Math.sin(state.b * x);
+      const [, py] = toPixel(x, y, xMin, xMax, yMin, yMax, W, H);
+      if (i === 0)
+        ctx.moveTo(px, py);
+      else
+        ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+  if (revealMoves) {
+    const drawDot = (m, type) => {
+      const isWin = type === "winning";
+      const isDiscarded = type === "discarded";
+      let color = COLOR_TRUE;
+      if (isWin)
+        color = COLOR_WIN;
+      else if (isDiscarded)
+        color = COLOR_DISCARDED;
+      const [px, py] = toPixel(m.trueX, m.trueY, xMin, xMax, yMin, yMax, W, H);
+      const [, yZero] = toPixel(m.trueX, 0, xMin, xMax, yMin, yMax, W, H);
+      ctx.beginPath();
+      ctx.moveTo(px, yZero);
+      ctx.lineTo(px, py);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = isWin ? 2 : 1;
+      ctx.globalAlpha = isWin ? 0.8 : isDiscarded ? 0.6 : 0.4;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      ctx.beginPath();
+      ctx.arc(px, py, isWin ? DOT_R_TRUE + 1 : DOT_R_TRUE, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+    };
+    revealMoves.forEach((m) => {
+      const isWin = winResult && winResult.winning.includes(m);
+      const isDiscarded = winResult && winResult.discarded.includes(m);
+      if (!isWin && !isDiscarded)
+        drawDot(m, "normal");
+    });
+    revealMoves.forEach((m) => {
+      const isDiscarded = winResult && winResult.discarded.includes(m);
+      if (isDiscarded)
+        drawDot(m, "discarded");
+    });
+    revealMoves.forEach((m) => {
+      const isWin = winResult && winResult.winning.includes(m);
+      if (isWin)
+        drawDot(m, "winning");
+    });
+  }
+}
+function appendLog(text) {
+  const li = document.createElement("li");
+  li.textContent = text;
+  logList.appendChild(li);
+  logList.parentElement.scrollTop = logList.parentElement.scrollHeight;
+}
+function clearLog() {
+  logList.innerHTML = "";
+}
+function setControlsDisabled(disabled) {
+  inputX.disabled = disabled;
+  btnDrop.disabled = disabled;
+  btnClaim.disabled = disabled;
+}
+function updateMovesDisplay() {
+  movesValue.textContent = String(MAX_MOVES - state.moveCount);
+}
+function reveal(claimed) {
+  setControlsDisabled(true);
+  const winResult = checkWin(state);
+  const win = winResult !== null;
+  revealLegend.forEach((el) => el.classList.remove("hidden"));
+  const trueYs = state.moves.map((m) => m.trueY).sort((a, b) => a - b);
+  const body = [
+    `Secret:  a = ${state.a.toFixed(2)},  b = ${state.b.toFixed(2)}`,
+    `Noise:   σ_η = ${state.sigmaEta.toFixed(2)},  σ_ε = ${state.sigmaEps.toFixed(2)}`,
+    `True Y values (sorted): [${trueYs.map((y) => y.toFixed(2)).join(", ")}]`,
+    `Window Packing (k=4, W=4, d=0.5): ${win ? "YES" : "NO"}`,
+    "",
+    !claimed ? "You ran out of moves without claiming. You lose." : win ? "You claimed and were RIGHT — you win!" : "You claimed but were WRONG — you lose."
+  ].join(`
+`);
+  gameOverTitle.textContent = win && claimed ? "You Win!" : "Game Over";
+  gameOverTitle.className = win && claimed ? "win" : "lose";
+  gameOverBody.textContent = body;
+  controls.classList.add("hidden");
+  logSection.classList.add("hidden");
+  gameOverPanel.classList.remove("hidden");
+  drawGraph(state.moves, winResult);
+}
+function startNewGame() {
+  state = createGame();
+  clearLog();
+  gameOverPanel.classList.add("hidden");
+  controls.classList.remove("hidden");
+  logSection.classList.remove("hidden");
+  revealLegend.forEach((el) => el.classList.add("hidden"));
+  setControlsDisabled(false);
+  updateMovesDisplay();
+  statusMsg.textContent = "";
+  inputX.value = "";
+  inputX.focus();
+  drawGraph();
+}
+function dropPiece() {
+  const raw = inputX.value.trim();
+  const x = parseFloat(raw);
+  if (raw === "" || isNaN(x)) {
+    statusMsg.textContent = "Enter a valid number.";
+    inputX.focus();
+    return;
+  }
+  statusMsg.textContent = "";
+  const { observed, newState } = submitMove(state, x);
+  state = newState;
+  appendLog(`move ${state.moveCount}  x = ${x}  →  y ≈ ${observed.toFixed(2)}`);
+  updateMovesDisplay();
+  drawGraph();
+  inputX.value = "";
+  inputX.focus();
+  if (state.moveCount >= MAX_MOVES) {
+    reveal(false);
+  }
+}
+btnDrop.addEventListener("click", dropPiece);
+btnClaim.addEventListener("click", () => reveal(true));
+btnNewGame.addEventListener("click", startNewGame);
+btnGameOverNew.addEventListener("click", startNewGame);
+inputX.addEventListener("keydown", (e) => {
+  if (e.key === "Enter")
+    dropPiece();
+});
+function updateSliderUI() {
+  const min = parseFloat(rangeMin.value);
+  const max = parseFloat(rangeMax.value);
+  if (min >= max) {}
+  viewXMin = min;
+  viewXMax = max;
+  valMin.textContent = min.toFixed(1);
+  valMax.textContent = max.toFixed(1);
+  const totalRange = parseFloat(rangeMax.max) - parseFloat(rangeMax.min);
+  const left = (min - parseFloat(rangeMin.min)) / totalRange * 100;
+  const right = (max - parseFloat(rangeMin.min)) / totalRange * 100;
+  rangeSelection.style.left = `${left}%`;
+  rangeSelection.style.width = `${right - left}%`;
+  const isRevealed = !gameOverPanel.classList.contains("hidden");
+  drawGraph(isRevealed ? state.moves : null, isRevealed ? checkWin(state) : null);
+}
+rangeMin.addEventListener("input", () => {
+  rangeMin.style.zIndex = "3";
+  rangeMax.style.zIndex = "2";
+  if (parseFloat(rangeMin.value) >= parseFloat(rangeMax.value)) {
+    rangeMin.value = String(parseFloat(rangeMax.value) - 0.1);
+  }
+  updateSliderUI();
+});
+rangeMax.addEventListener("input", () => {
+  rangeMax.style.zIndex = "3";
+  rangeMin.style.zIndex = "2";
+  if (parseFloat(rangeMax.value) <= parseFloat(rangeMin.value)) {
+    rangeMax.value = String(parseFloat(rangeMin.value) + 0.1);
+  }
+  updateSliderUI();
+});
+updateSliderUI();
+var resizeObserver = new ResizeObserver((entries) => {
+  for (const entry of entries) {
+    if (entry.target === canvas) {
+      const isRevealed = !gameOverPanel.classList.contains("hidden") || btnDrop.disabled;
+      drawGraph(isRevealed ? state.moves : null, isRevealed ? checkWin(state) : null);
+    }
+  }
+});
+resizeObserver.observe(canvas);
+startNewGame();

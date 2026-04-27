@@ -9,6 +9,7 @@ import {
   checkWin,
   type GameState,
   type MoveRecord,
+  type WinResult,
 } from "./game";
 
 // ── DOM refs ────────────────────────────────────────────────────────────────
@@ -50,6 +51,7 @@ const DOT_R_TRUE  = 5;
 const COLOR_NOISY  = "#aaaaaa";
 const COLOR_TRUE   = "#2563eb";
 const COLOR_WIN    = "#10b981"; // emerald-500
+const COLOR_DISCARDED = "#ef4444"; // red-500
 const COLOR_AXIS   = "#e5e7eb";
 const COLOR_TICK   = "#999999";
 const COLOR_ZERO   = "#cccccc";
@@ -90,7 +92,7 @@ function expand(min: number, max: number, margin = 0.12): [number, number] {
 
 // ── Canvas drawing ───────────────────────────────────────────────────────────
 
-function drawGraph(revealMoves: MoveRecord[] | null = null, winningMoves: MoveRecord[] | null = null): void {
+function drawGraph(revealMoves: MoveRecord[] | null = null, winResult: WinResult | null = null): void {
   // DPR-aware sizing
   const dpr  = window.devicePixelRatio || 1;
   const rect  = canvas.getBoundingClientRect();
@@ -215,7 +217,14 @@ function drawGraph(revealMoves: MoveRecord[] | null = null, winningMoves: MoveRe
 
   // ── True placement dots (reveal only) ──────────────────────────────────────
   if (revealMoves) {
-    const drawDot = (m: MoveRecord, isWin: boolean) => {
+    const drawDot = (m: MoveRecord, type: 'winning' | 'discarded' | 'normal') => {
+      const isWin = type === 'winning';
+      const isDiscarded = type === 'discarded';
+
+      let color = COLOR_TRUE;
+      if (isWin) color = COLOR_WIN;
+      else if (isDiscarded) color = COLOR_DISCARDED;
+
       const [px, py]   = toPixel(m.trueX, m.trueY, xMin, xMax, yMin, yMax, W, H);
       const [, yZero]  = toPixel(m.trueX, 0,       xMin, xMax, yMin, yMax, W, H);
 
@@ -223,29 +232,36 @@ function drawGraph(revealMoves: MoveRecord[] | null = null, winningMoves: MoveRe
       ctx.beginPath();
       ctx.moveTo(px, yZero);
       ctx.lineTo(px, py);
-      ctx.strokeStyle = isWin ? COLOR_WIN : COLOR_TRUE;
+      ctx.strokeStyle = color;
       ctx.lineWidth   = isWin ? 2 : 1;
-      ctx.globalAlpha = isWin ? 0.8 : 0.4;
+      ctx.globalAlpha = isWin ? 0.8 : (isDiscarded ? 0.6 : 0.4);
       ctx.stroke();
       ctx.globalAlpha = 1;
 
       // Dot
       ctx.beginPath();
       ctx.arc(px, py, isWin ? DOT_R_TRUE + 1 : DOT_R_TRUE, 0, Math.PI * 2);
-      ctx.fillStyle = isWin ? COLOR_WIN : COLOR_TRUE;
+      ctx.fillStyle = color;
       ctx.fill();
     };
 
-    // Draw non-winning dots first
+    // Draw non-winning, non-discarded dots first
     revealMoves.forEach((m) => {
-      const isWin = winningMoves && winningMoves.includes(m);
-      if (!isWin) drawDot(m, false);
+      const isWin = winResult && winResult.winning.includes(m);
+      const isDiscarded = winResult && winResult.discarded.includes(m);
+      if (!isWin && !isDiscarded) drawDot(m, 'normal');
+    });
+
+    // Draw discarded dots
+    revealMoves.forEach((m) => {
+      const isDiscarded = winResult && winResult.discarded.includes(m);
+      if (isDiscarded) drawDot(m, 'discarded');
     });
 
     // Draw winning dots on top
     revealMoves.forEach((m) => {
-      const isWin = winningMoves && winningMoves.includes(m);
-      if (isWin) drawDot(m, true);
+      const isWin = winResult && winResult.winning.includes(m);
+      if (isWin) drawDot(m, 'winning');
     });
   }
 }
@@ -280,8 +296,8 @@ function updateMovesDisplay(): void {
 function reveal(claimed: boolean): void {
   setControlsDisabled(true);
 
-  const winSubset = checkWin(state);
-  const win = winSubset !== null;
+  const winResult = checkWin(state);
+  const win = winResult !== null;
 
   // Show legend item for true points
   revealLegend.forEach((el) => el.classList.remove("hidden"));
@@ -309,7 +325,7 @@ function reveal(claimed: boolean): void {
   gameOverPanel.classList.remove("hidden");
 
   // Redraw now that layout has shifted
-  drawGraph(state.moves, winSubset);
+  drawGraph(state.moves, winResult);
 }
 
 // ── New game ─────────────────────────────────────────────────────────────────
