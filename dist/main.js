@@ -15,7 +15,7 @@ function uniform(a, b) {
 }
 function createGame() {
   return {
-    a: uniform(8, 16),
+    a: uniform(4, 10),
     b: uniform(0.1, 2),
     sigmaEta: uniform(0, 2),
     sigmaEps: uniform(0, 2),
@@ -29,20 +29,40 @@ function submitMove(state, x) {
   const eta = gaussRandom(0, sigmaEta);
   const trueX = x + eta;
   const trueF = a * Math.sin(b * trueX);
-  const col = Math.round(trueF);
+  const trueY = trueF;
   const epsilon = gaussRandom(0, sigmaEps);
   const observed = trueF + epsilon;
-  const record = { x, trueX, observed, col };
+  const record = { x, trueX, observed, trueY };
   const newState = {
     ...state,
     moves: [...state.moves, record],
     moveCount: state.moveCount + 1
   };
-  return { observed, col, newState };
+  return { observed, trueY, newState };
 }
 function checkWin(state) {
-  const occupied = new Set(state.moves.map((m) => m.col));
-  return [...occupied].some((c) => [0, 1, 2, 3].every((i) => occupied.has(c + i)));
+  const k = 5;
+  const W = 5;
+  const d = 0.5;
+  const sortedY = state.moves.map((m) => m.trueY).sort((a, b) => a - b);
+  for (let i = 0;i <= sortedY.length - k; i++) {
+    let count = 1;
+    let currentY = sortedY[i];
+    let maxFoundY = currentY;
+    for (let j = i + 1;j < sortedY.length; j++) {
+      if (sortedY[j] - currentY >= d) {
+        count++;
+        currentY = sortedY[j];
+        maxFoundY = currentY;
+        if (count === k)
+          break;
+      }
+    }
+    if (count === k && maxFoundY - sortedY[i] <= W) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // src/main.ts
@@ -123,7 +143,7 @@ function drawGraph(revealMoves = null) {
   if (revealMoves) {
     revealMoves.forEach((m) => {
       allX.push(m.trueX);
-      allY.push(m.col);
+      allY.push(m.trueY);
     });
   }
   const xMin = viewXMin;
@@ -199,7 +219,7 @@ function drawGraph(revealMoves = null) {
   }
   if (revealMoves) {
     revealMoves.forEach((m) => {
-      const [px, py] = toPixel(m.trueX, m.col, xMin, xMax, yMin, yMax, W, H);
+      const [px, py] = toPixel(m.trueX, m.trueY, xMin, xMax, yMin, yMax, W, H);
       const [, yZero] = toPixel(m.trueX, 0, xMin, xMax, yMin, yMax, W, H);
       ctx.beginPath();
       ctx.moveTo(px, yZero);
@@ -237,12 +257,12 @@ function reveal(claimed) {
   setControlsDisabled(true);
   const win = checkWin(state);
   revealLegend.forEach((el) => el.classList.remove("hidden"));
-  const cols = state.moves.map((m) => m.col).sort((a, b) => a - b);
+  const trueYs = state.moves.map((m) => m.trueY).sort((a, b) => a - b);
   const body = [
     `Secret:  a = ${state.a.toFixed(2)},  b = ${state.b.toFixed(2)}`,
     `Noise:   σ_η = ${state.sigmaEta.toFixed(2)},  σ_ε = ${state.sigmaEps.toFixed(2)}`,
-    `True columns (sorted): [${cols.join(", ")}]`,
-    `4-in-a-row: ${win ? "YES" : "NO"}`,
+    `True Y values (sorted): [${trueYs.map((y) => y.toFixed(2)).join(", ")}]`,
+    `Window Packing (k=5, W=5, d=0.5): ${win ? "YES" : "NO"}`,
     "",
     !claimed ? "You ran out of moves without claiming. You lose." : win ? "You claimed and were RIGHT — you win!" : "You claimed but were WRONG — you lose."
   ].join(`
@@ -313,12 +333,16 @@ function updateSliderUI() {
   drawGraph(gameOverPanel.classList.contains("hidden") ? null : state.moves);
 }
 rangeMin.addEventListener("input", () => {
+  rangeMin.style.zIndex = "3";
+  rangeMax.style.zIndex = "2";
   if (parseFloat(rangeMin.value) >= parseFloat(rangeMax.value)) {
     rangeMin.value = String(parseFloat(rangeMax.value) - 0.1);
   }
   updateSliderUI();
 });
 rangeMax.addEventListener("input", () => {
+  rangeMax.style.zIndex = "3";
+  rangeMin.style.zIndex = "2";
   if (parseFloat(rangeMax.value) <= parseFloat(rangeMin.value)) {
     rangeMax.value = String(parseFloat(rangeMin.value) + 0.1);
   }

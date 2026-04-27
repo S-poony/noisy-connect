@@ -115,7 +115,7 @@ function drawGraph(revealMoves: MoveRecord[] | null = null): void {
   if (revealMoves) {
     revealMoves.forEach((m) => {
       allX.push(m.trueX);
-      allY.push(m.col);
+      allY.push(m.trueY);
     });
   }
 
@@ -215,8 +215,8 @@ function drawGraph(revealMoves: MoveRecord[] | null = null): void {
   // ── True placement dots (reveal only) ──────────────────────────────────────
   if (revealMoves) {
     revealMoves.forEach((m) => {
-      const [px, py]   = toPixel(m.trueX, m.col, xMin, xMax, yMin, yMax, W, H);
-      const [, yZero]  = toPixel(m.trueX, 0,     xMin, xMax, yMin, yMax, W, H);
+      const [px, py]   = toPixel(m.trueX, m.trueY, xMin, xMax, yMin, yMax, W, H);
+      const [, yZero]  = toPixel(m.trueX, 0,       xMin, xMax, yMin, yMax, W, H);
 
       // Thin vertical line from x-axis to dot
       ctx.beginPath();
@@ -273,12 +273,12 @@ function reveal(claimed: boolean): void {
   revealLegend.forEach((el) => el.classList.remove("hidden"));
 
   // Build content
-  const cols = state.moves.map((m) => m.col).sort((a, b) => a - b);
+  const trueYs = state.moves.map((m) => m.trueY).sort((a, b) => a - b);
   const body = [
     `Secret:  a = ${state.a.toFixed(2)},  b = ${state.b.toFixed(2)}`,
     `Noise:   σ_η = ${state.sigmaEta.toFixed(2)},  σ_ε = ${state.sigmaEps.toFixed(2)}`,
-    `True columns (sorted): [${cols.join(", ")}]`,
-    `4-in-a-row: ${win ? "YES" : "NO"}`,
+    `True Y values (sorted): [${trueYs.map((y) => y.toFixed(2)).join(", ")}]`,
+    `Window Packing (k=5, W=5, d=0.5): ${win ? "YES" : "NO"}`,
     "",
     !claimed
       ? "You ran out of moves without claiming. You lose."

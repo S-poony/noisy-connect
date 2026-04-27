@@ -33,8 +33,8 @@ export interface MoveRecord {
   trueX: number;
   /** Noisy readout shown to the player: trueF + epsilon. */
   observed: number;
-  /** True column: round(a * sin(b * (x + eta))). Hidden until reveal. */
-  col: number;
+  /** True y value: a * sin(b * (x + eta)). Hidden until reveal. */
+  trueY: number;
 }
 
 export interface GameState {
@@ -56,7 +56,7 @@ export interface GameState {
 /** Create a new game with randomised secret parameters. */
 export function createGame(): GameState {
   return {
-    a: uniform(8.0, 16.0),         // amplitude, lower is easier for connect 4
+    a: uniform(4.0, 10.0),         // amplitude
     b: uniform(0.1, 2.0),          // frequency
     sigmaEta: uniform(0.0, 2.0),   // input jitter
     sigmaEps: uniform(0.0, 2.0),   // output reading noise
@@ -68,7 +68,7 @@ export function createGame(): GameState {
 
 export interface MoveResult {
   observed: number;
-  col: number;
+  trueY: number;
   newState: GameState;
 }
 
@@ -87,8 +87,8 @@ export function submitMove(state: GameState, x: number): MoveResult {
   // True function value — equivalent to Python: true_f = a * math.sin(b * true_x)
   const trueF = a * Math.sin(b * trueX);
 
-  // Column — equivalent to Python: col = round(true_f)
-  const col = Math.round(trueF);
+  // True y value — replaces the old integer column
+  const trueY = trueF;
 
   // Output noise — equivalent to Python: epsilon = random.gauss(0, sigma_eps)
   const epsilon = gaussRandom(0, sigmaEps);
@@ -96,25 +96,46 @@ export function submitMove(state: GameState, x: number): MoveResult {
   // Observed — equivalent to Python: observed = true_f + epsilon
   const observed = trueF + epsilon;
 
-  const record: MoveRecord = { x, trueX, observed, col };
+  const record: MoveRecord = { x, trueX, observed, trueY };
   const newState: GameState = {
     ...state,
     moves: [...state.moves, record],
     moveCount: state.moveCount + 1,
   };
 
-  return { observed, col, newState };
+  return { observed, trueY, newState };
 }
 
 /**
- * Check the 4-in-a-row win condition.
- * Equivalent to Python:
- *   occupied = set(true_columns)
- *   win = any(all((c + i) in occupied for i in range(4)) for c in occupied)
+ * Check the "Window Packing" win condition.
+ * Require at least k pieces in a continuous interval of length at most W,
+ * with no two pieces closer than d.
  */
 export function checkWin(state: GameState): boolean {
-  const occupied = new Set(state.moves.map((m) => m.col));
-  return [...occupied].some((c) =>
-    [0, 1, 2, 3].every((i) => occupied.has(c + i))
-  );
+  const k = 4;
+  const W = 4;
+  const d = 0.5;
+
+  const sortedY = state.moves.map((m) => m.trueY).sort((a, b) => a - b);
+
+  for (let i = 0; i <= sortedY.length - k; i++) {
+    let count = 1;
+    let currentY = sortedY[i];
+    let maxFoundY = currentY;
+
+    for (let j = i + 1; j < sortedY.length; j++) {
+      if (sortedY[j] - currentY >= d) {
+        count++;
+        currentY = sortedY[j];
+        maxFoundY = currentY;
+        if (count === k) break;
+      }
+    }
+
+    if (count === k && maxFoundY - sortedY[i] <= W) {
+      return true;
+    }
+  }
+
+  return false;
 }
