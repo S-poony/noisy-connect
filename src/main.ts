@@ -281,6 +281,12 @@ function drawGraph(revealMoves: MoveRecord[] | null = null, winResult: WinResult
   }
 }
 
+/** Redraw the graph based on the current game and reveal state. */
+function refreshGraph(): void {
+  const isRevealed = !gameOverPanel.classList.contains("hidden") || btnDrop.disabled;
+  drawGraph(isRevealed ? state.moves : null, isRevealed ? checkWin(state) : null);
+}
+
 // ── Log ──────────────────────────────────────────────────────────────────────
 
 function appendLog(text: string): void {
@@ -357,7 +363,7 @@ function startNewGame(): void {
   statusMsg.textContent = "";
   inputX.value = "";
   inputX.focus();
-  drawGraph();
+  refreshGraph();
 }
 
 // ── Rules Modal ─────────────────────────────────────────────────────────────
@@ -404,7 +410,7 @@ function dropPiece(): void {
 
   appendLog(`move ${state.moveCount}  x = ${x}  →  y ≈ ${observed.toFixed(2)}`);
   updateMovesDisplay();
-  drawGraph();
+  refreshGraph();
 
   inputX.value = "";
   inputX.focus();
@@ -457,13 +463,13 @@ canvas.addEventListener("mousemove", (e) => {
     hoverX = null;
     canvas.style.cursor = "default";
   }
-  drawGraph();
+  refreshGraph();
 });
 
 canvas.addEventListener("mouseleave", () => {
   hoverX = null;
   canvas.style.cursor = "default";
-  drawGraph();
+  refreshGraph();
 });
 
 canvas.addEventListener("click", () => {
@@ -497,9 +503,7 @@ function updateSliderUI(): void {
   const right = ((max - parseFloat(rangeMin.min)) / totalRange) * 100;
   rangeSelection.style.left  = `${left}%`;
   rangeSelection.style.width = `${right - left}%`;
-
-  const isRevealed = !gameOverPanel.classList.contains("hidden");
-  drawGraph(isRevealed ? state.moves : null, isRevealed ? checkWin(state) : null);
+  refreshGraph();
 }
 
 rangeMin.addEventListener("input", () => {
@@ -527,9 +531,7 @@ updateSliderUI();
 const resizeObserver = new ResizeObserver((entries) => {
   for (const entry of entries) {
     if (entry.target === canvas) {
-      // Check if revealed
-      const isRevealed = !gameOverPanel.classList.contains("hidden") || btnDrop.disabled;
-      drawGraph(isRevealed ? state.moves : null, isRevealed ? checkWin(state) : null);
+      refreshGraph();
     }
   }
 });
