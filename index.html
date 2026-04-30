@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Noisy Connect</title>
+    <meta
+      name="description"
+      content="A single-player mathematical deduction game. Probe a hidden sinusoidal function through noise, then claim 4 consecutive integer columns to win."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <!-- ── Header ─────────────────────────────────────────── -->
+    <header id="header">
+      <div id="header-left">
+        <h1 id="title">Noisy Connect</h1>
+        <p id="formula" class="mono">y&nbsp;=&nbsp;a&thinsp;·&thinsp;sin(b&thinsp;·&thinsp;(x&thinsp;+&thinsp;η))&thinsp;+&thinsp;ε</p>
+      </div>
+      <button id="btn-rules" aria-label="Show game rules">Rules</button>
+    </header>
+
+    <!-- ── Info bar ───────────────────────────────────────── -->
+    <div id="info-bar">
+      <span id="moves-left" class="mono">Moves left: <strong id="moves-value">20</strong>&thinsp;/&thinsp;20</span>
+      <span id="status-msg"></span>
+    </div>
+
+    <!-- ── Main graph ─────────────────────────────────────── -->
+    <main id="main-area">
+      <div id="canvas-container">
+        <canvas id="graph" aria-label="Game graph showing noisy readouts and, after reveal, true column placements"></canvas>
+      </div>
+
+      <!-- Range Slider -->
+      <div id="range-container">
+        <div class="range-slider">
+          <div id="range-track"></div>
+          <div id="range-selection"></div>
+          <input type="range" id="range-min" min="-100" max="100" step="0.1" value="-15" aria-label="X-axis minimum">
+          <input type="range" id="range-max" min="-100" max="100" step="0.1" value="15" aria-label="X-axis maximum">
+        </div>
+        <div id="range-labels" class="mono">
+          <span id="val-min">-15.0</span>
+          <span id="val-max">15.0</span>
+        </div>
+      </div>
+
+      <div id="graph-legend" aria-hidden="true">
+        <span class="legend-item"><span class="legend-dot noisy"></span>Noisy readout (x typed, y observed)</span>
+        <span class="legend-item reveal-only hidden"><span class="legend-dot true"></span>True placement (x typed, col)</span>
+        <span class="legend-item reveal-only hidden"><span class="legend-line true"></span>Secret curve (y = a·sin(b·x))</span>
+      </div>
+    </main>
+
+    <!-- ── Controls ───────────────────────────────────────── -->
+    <section id="controls" aria-label="Game controls">
+      <label for="input-x" class="mono">x&nbsp;=</label>
+      <input
+        id="input-x"
+        type="number"
+        step="any"
+        placeholder="e.g. 1.5"
+        autocomplete="off"
+        aria-label="Enter x value"
+      />
+      <button id="btn-drop" aria-label="Drop piece at entered x">Drop Piece</button>
+      <button id="btn-claim" class="btn-accent" aria-label="Claim 4-in-a-row win">Claim Win →</button>
+    </section>
+
+    <!-- ── Log ────────────────────────────────────────────── -->
+    <section id="log-section" aria-label="Move log">
+      <ul id="log" class="mono" aria-live="polite" aria-relevant="additions"></ul>
+    </section>
+
+    <!-- ── Game Over Panel ────────────────────────────────── -->
+    <section id="game-over-panel" class="hidden" aria-label="Game over summary">
+      <div id="game-over-header">
+        <h2 id="game-over-title"></h2>
+        <button id="btn-game-over-new" class="btn-accent" aria-label="Play again">Play Again</button>
+      </div>
+      <p id="game-over-body" class="mono"></p>
+    </section>
+
+    <!-- ── Rules Modal ────────────────────────────────────── -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+      <div id="rules-modal" class="modal" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+        <button id="btn-close-modal" class="modal-close" aria-label="Close rules">&times;</button>
+        <div id="modal-content">
+          <!-- Content loaded from noisy_connect_rules.html -->
+          <div class="loading">Loading rules...</div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
