@@ -147,7 +147,7 @@ function drawGraph(revealMoves: MoveRecord[] | null = null, analysis: GameAnalys
   ctx.textBaseline = "middle";
 
   // Y ticks
-  const yStep = niceStep(yMax - yMin);
+  const yStep = 1;
   const yStart = Math.ceil(yMin / yStep) * yStep;
   if (yStep > 0 && isFinite(yStep)) {
     for (let yv = yStart; yv <= yMax + 1e-9; yv += yStep) {
