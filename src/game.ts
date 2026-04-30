@@ -120,60 +120,50 @@ export function submitMove(state: GameState, x: number): MoveResult {
 export interface WinResult {
   isWin: boolean;
   valid: MoveRecord[];
-  discarded: MoveRecord[];
 }
 
 /**
  * Check the "Window Packing" win condition.
- * Require at least k pieces in a continuous interval of length at most W,
- * with no two pieces closer than d.
+ * Find a subset of k pieces that are vertically close (Wy=1.0)
+ * but horizontally separated (Dx=6.0).
  */
 export function checkWin(state: GameState): WinResult {
   const k = 4;
-  const W = 4;
-  const d = 0.5;
+  const Wy = 1.0;
+  const Dx = 6.0;
 
-  const sortedMoves = [...state.moves].sort((a, b) => a.trueY - b.trueY);
+  const sortedByY = [...state.moves].sort((a, b) => a.trueY - b.trueY);
 
   let bestValid: MoveRecord[] = [];
-  let bestDiscarded: MoveRecord[] = [];
 
-  for (let i = 0; i < sortedMoves.length; i++) {
-    const subset: MoveRecord[] = [sortedMoves[i]];
-    const discarded: MoveRecord[] = [];
-    let currentY = sortedMoves[i].trueY;
+  for (let i = 0; i < sortedByY.length; i++) {
+    // 1. Candidate pool: points within Wy window
+    const candidates: MoveRecord[] = [];
+    for (let j = i; j < sortedByY.length; j++) {
+      if (sortedByY[j].trueY - sortedByY[i].trueY > Wy) break;
+      candidates.push(sortedByY[j]);
+    }
 
-    for (let j = i + 1; j < sortedMoves.length; j++) {
-      // Only consider points within the window W
-      if (sortedMoves[j].trueY - sortedMoves[i].trueY > W) {
-        break;
-      }
-
-      if (sortedMoves[j].trueY - currentY >= d) {
-        subset.push(sortedMoves[j]);
-        currentY = sortedMoves[j].trueY;
-        if (subset.length === k) {
-          return { isWin: true, valid: subset, discarded };
+    // 2. Greedy packing by trueX
+    candidates.sort((a, b) => a.trueX - b.trueX);
+    const packed: MoveRecord[] = [];
+    if (candidates.length > 0) {
+      packed.push(candidates[0]);
+      for (let c = 1; c < candidates.length; c++) {
+        if (candidates[c].trueX - packed[packed.length - 1].trueX >= Dx) {
+          packed.push(candidates[c]);
         }
-      } else {
-        discarded.push(sortedMoves[j]);
       }
     }
 
-    // Score this attempt to find the "best failed attempt"
-    // Primary: Number of valid points kept
-    // Secondary: Number of discarded points (more discarded = tighter cluster)
-    // Note: If two windows have the exact same number of valid and discarded points, 
-    // the algorithm will simply keep the first one it found (the one with the lowest Y-coordinate). 
-    const isBetter = 
-      subset.length > bestValid.length ||
-      (subset.length === bestValid.length && discarded.length > bestDiscarded.length);
+    if (packed.length >= k) {
+      return { isWin: true, valid: packed.slice(0, k) };
+    }
 
-    if (isBetter) {
-      bestValid = subset;
-      bestDiscarded = discarded;
+    if (packed.length > bestValid.length) {
+      bestValid = packed;
     }
   }
 
-  return { isWin: false, valid: bestValid, discarded: bestDiscarded };
+  return { isWin: false, valid: bestValid };
 }

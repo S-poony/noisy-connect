@@ -54,7 +54,6 @@ const DOT_R_TRUE  = 5;
 const COLOR_NOISY  = "#aaaaaa";
 const COLOR_TRUE   = "#2563eb";
 const COLOR_WIN    = "#10b981"; // emerald-500
-const COLOR_DISCARDED = "#ef4444"; // red-500
 const COLOR_AXIS   = "#e5e7eb";
 const COLOR_TICK   = "#999999";
 const COLOR_ZERO   = "#cccccc";
@@ -220,13 +219,11 @@ function drawGraph(revealMoves: MoveRecord[] | null = null, winResult: WinResult
 
   // ── True placement dots (reveal only) ──────────────────────────────────────
   if (revealMoves) {
-    const drawDot = (m: MoveRecord, type: 'winning' | 'discarded' | 'normal') => {
+    const drawDot = (m: MoveRecord, type: 'winning' | 'normal') => {
       const isWin = type === 'winning';
-      const isDiscarded = type === 'discarded';
 
       let color = COLOR_TRUE;
       if (isWin) color = COLOR_WIN;
-      else if (isDiscarded) color = COLOR_DISCARDED;
 
       const [px, py]   = toPixel(m.trueX, m.trueY, xMin, xMax, yMin, yMax, W, H);
       const [xZero]    = toPixel(0,       m.trueY, xMin, xMax, yMin, yMax, W, H);
@@ -237,7 +234,7 @@ function drawGraph(revealMoves: MoveRecord[] | null = null, winResult: WinResult
       ctx.lineTo(px, py);
       ctx.strokeStyle = color;
       ctx.lineWidth   = isWin ? 2 : 1;
-      ctx.globalAlpha = isWin ? 0.8 : (isDiscarded ? 0.6 : 0.4);
+      ctx.globalAlpha = isWin ? 0.8 : 0.4;
       ctx.stroke();
       ctx.globalAlpha = 1;
 
@@ -248,17 +245,10 @@ function drawGraph(revealMoves: MoveRecord[] | null = null, winResult: WinResult
       ctx.fill();
     };
 
-    // Draw non-winning, non-discarded dots first
+    // Draw non-winning dots first
     revealMoves.forEach((m) => {
       const isWin = winResult && winResult.isWin && winResult.valid.includes(m);
-      const isDiscarded = winResult && winResult.discarded.includes(m);
-      if (!isWin && !isDiscarded) drawDot(m, 'normal');
-    });
-
-    // Draw discarded dots
-    revealMoves.forEach((m) => {
-      const isDiscarded = winResult && winResult.discarded.includes(m);
-      if (isDiscarded) drawDot(m, 'discarded');
+      if (!isWin) drawDot(m, 'normal');
     });
 
     // Draw winning dots on top
@@ -311,7 +301,7 @@ function reveal(claimed: boolean): void {
     `Secret:  a = ${state.a.toFixed(2)},  b = ${state.b.toFixed(2)}`,
     `Noise:   σ_η = ${state.sigmaEta.toFixed(2)},  σ_ε = ${state.sigmaEps.toFixed(2)}`,
     `True Y values (sorted): [${trueYs.map((y) => y.toFixed(2)).join(", ")}]`,
-    `Window Packing (k=4, W=4, d=0.5): ${win ? "YES" : "NO"}`,
+    `Window Packing (k=4, Wy=1.0, Dx=6.0): ${win ? "YES" : "NO"}`,
     "",
     !claimed
       ? "You ran out of moves without claiming. You lose."
