@@ -44,6 +44,7 @@ const btnCloseModal= document.getElementById("btn-close-modal") as HTMLButtonEle
 let state: GameState = createGame();
 let viewXMin = parseFloat(rangeMin.value);
 let viewXMax = parseFloat(rangeMax.value);
+let hoverX: number | null = null;
 
 // ── Graph constants ──────────────────────────────────────────────────────────
 
@@ -71,6 +72,11 @@ function toPixel(
   const px = PADDING.left + ((x - xMin) / (xMax - xMin)) * w;
   const py = PADDING.top  + ((yMax - y) / (yMax - yMin)) * h;
   return [px, py];
+}
+
+/** Map canvas pixel coords → data coords (X only). */
+function toDataX(px: number, xMin: number, xMax: number, w: number): number {
+  return xMin + ((px - PADDING.left) / w) * (xMax - xMin);
 }
 
 /** Nice tick step given a range and desired tick count. */
@@ -257,6 +263,22 @@ function drawGraph(revealMoves: MoveRecord[] | null = null, winResult: WinResult
       if (isWin) drawDot(m, 'winning');
     });
   }
+
+  // ── Hover Indicator ────────────────────────────────────────────────────────
+  if (hoverX !== null && !revealMoves) {
+    const [px, py] = toPixel(hoverX, state.a * Math.sin(state.b * hoverX), xMin, xMax, yMin, yMax, W, H);
+    
+    ctx.save();
+    // Vertical guide line
+    ctx.beginPath();
+    ctx.setLineDash([4, 4]);
+    ctx.moveTo(px, PADDING.top);
+    ctx.lineTo(px, PADDING.top + H);
+    ctx.strokeStyle = COLOR_TRUE;
+    ctx.globalAlpha = 0.3;
+    ctx.stroke();
+    ctx.restore();
+  }
 }
 
 // ── Log ──────────────────────────────────────────────────────────────────────
@@ -416,6 +438,39 @@ btnGameOverNew.addEventListener("click", startNewGame);
 
 inputX.addEventListener("keydown", (e) => {
   if (e.key === "Enter") dropPiece();
+});
+
+canvas.addEventListener("mousemove", (e) => {
+  if (btnDrop.disabled) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const dpr  = window.devicePixelRatio || 1;
+  const cssW = rect.width;
+  const W    = cssW - PADDING.left - PADDING.right;
+
+  const px = e.clientX - rect.left;
+  
+  if (px >= PADDING.left && px <= PADDING.left + W) {
+    hoverX = toDataX(px, viewXMin, viewXMax, W);
+    canvas.style.cursor = "crosshair";
+  } else {
+    hoverX = null;
+    canvas.style.cursor = "default";
+  }
+  drawGraph();
+});
+
+canvas.addEventListener("mouseleave", () => {
+  hoverX = null;
+  canvas.style.cursor = "default";
+  drawGraph();
+});
+
+canvas.addEventListener("click", () => {
+  if (hoverX !== null && !btnDrop.disabled) {
+    inputX.value = hoverX.toFixed(3);
+    dropPiece();
+  }
 });
 
 // ── Slider logic ────────────────────────────────────────────────────────────
