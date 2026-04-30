@@ -117,17 +117,20 @@ export function submitMove(state: GameState, x: number): MoveResult {
   return { observed, trueY, newState };
 }
 
-export interface WinResult {
+export interface GameAnalysis {
   isWin: boolean;
+  /** Points that satisfy the win condition (if isWin) or the longest valid sequence (if !isWin). */
   valid: MoveRecord[];
+  /** True if there was a vertical window with 4+ points that were too clustered horizontally. */
+  hasClusteredWindow: boolean;
 }
 
 /**
- * Check the "Window Packing" win condition.
+ * Analyze the game state using the "Window Packing" rules.
  * Find a subset of k pieces that are vertically close (Wy=1.0)
  * but horizontally separated (Dx=6.0).
  */
-export function checkWin(state: GameState): WinResult {
+export function analyzeGame(state: GameState): GameAnalysis {
   const k = 4;
   const Wy = 1.0;
   const Dx = 6.0;
@@ -135,6 +138,7 @@ export function checkWin(state: GameState): WinResult {
   const sortedByY = [...state.moves].sort((a, b) => a.trueY - b.trueY);
 
   let bestValid: MoveRecord[] = [];
+  let hasClusteredWindow = false;
 
   for (let i = 0; i < sortedByY.length; i++) {
     // 1. Candidate pool: points within Wy window
@@ -157,7 +161,16 @@ export function checkWin(state: GameState): WinResult {
     }
 
     if (packed.length >= k) {
-      return { isWin: true, valid: packed.slice(0, k) };
+      return { 
+        isWin: true, 
+        valid: packed.slice(0, k), 
+        hasClusteredWindow: false 
+      };
+    }
+
+    // If we have 4+ points in the vertical window but couldn't pack 4, it's clustered
+    if (candidates.length >= k && packed.length < k) {
+      hasClusteredWindow = true;
     }
 
     if (packed.length > bestValid.length) {
@@ -165,5 +178,9 @@ export function checkWin(state: GameState): WinResult {
     }
   }
 
-  return { isWin: false, valid: bestValid };
+  return { 
+    isWin: false, 
+    valid: bestValid, 
+    hasClusteredWindow 
+  };
 }

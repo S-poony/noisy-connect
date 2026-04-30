@@ -6,10 +6,10 @@ import {
   MAX_MOVES,
   createGame,
   submitMove,
-  checkWin,
+  analyzeGame,
   type GameState,
   type MoveRecord,
-  type WinResult,
+  type GameAnalysis,
 } from "./game";
 
 // ── DOM refs ────────────────────────────────────────────────────────────────
@@ -100,7 +100,7 @@ function expand(min: number, max: number, margin = 0.12): [number, number] {
 
 // ── Canvas drawing ───────────────────────────────────────────────────────────
 
-function drawGraph(revealMoves: MoveRecord[] | null = null, winResult: WinResult | null = null): void {
+function drawGraph(revealMoves: MoveRecord[] | null = null, analysis: GameAnalysis | null = null): void {
   // DPR-aware sizing
   const dpr  = window.devicePixelRatio || 1;
   const rect  = canvas.getBoundingClientRect();
@@ -253,13 +253,13 @@ function drawGraph(revealMoves: MoveRecord[] | null = null, winResult: WinResult
 
     // Draw non-winning dots first
     revealMoves.forEach((m) => {
-      const isWin = winResult && winResult.isWin && winResult.valid.includes(m);
+      const isWin = analysis && analysis.isWin && analysis.valid.includes(m);
       if (!isWin) drawDot(m, 'normal');
     });
 
     // Draw winning dots on top
     revealMoves.forEach((m) => {
-      const isWin = winResult && winResult.isWin && winResult.valid.includes(m);
+      const isWin = analysis && analysis.isWin && analysis.valid.includes(m);
       if (isWin) drawDot(m, 'winning');
     });
   }
@@ -284,7 +284,7 @@ function drawGraph(revealMoves: MoveRecord[] | null = null, winResult: WinResult
 /** Redraw the graph based on the current game and reveal state. */
 function refreshGraph(): void {
   const isRevealed = !gameOverPanel.classList.contains("hidden") || btnDrop.disabled;
-  drawGraph(isRevealed ? state.moves : null, isRevealed ? checkWin(state) : null);
+  drawGraph(isRevealed ? state.moves : null, isRevealed ? analyzeGame(state) : null);
 }
 
 // ── Log ──────────────────────────────────────────────────────────────────────
@@ -317,26 +317,37 @@ function updateMovesDisplay(): void {
 function reveal(claimed: boolean): void {
   setControlsDisabled(true);
 
-  const winResult = checkWin(state);
-  const win = winResult.isWin;
+  const analysis = analyzeGame(state);
+  const win = analysis.isWin;
 
   // Show legend item for true points
   revealLegend.forEach((el) => el.classList.remove("hidden"));
 
   // Build content
   const trueYs = state.moves.map((m) => m.trueY).sort((a, b) => a - b);
-  const body = [
+  const bodyLines = [
     `Secret:  a = ${state.a.toFixed(2)},  b = ${state.b.toFixed(2)}`,
     `Noise:   σ_η = ${state.sigmaEta.toFixed(2)},  σ_ε = ${state.sigmaEps.toFixed(2)}`,
     `True Y values (sorted): [${trueYs.map((y) => y.toFixed(2)).join(", ")}]`,
     `Window Packing (k=4, Wy=1.0, Dx=6.0): ${win ? "YES" : "NO"}`,
     "",
-    !claimed
-      ? "You ran out of moves without claiming. You lose."
-      : win
-      ? "You claimed and were RIGHT — you win!"
-      : "You claimed but were WRONG — you lose.",
-  ].join("\n");
+  ];
+
+  if (!claimed) {
+    bodyLines.push("You ran out of moves without claiming. You lose.");
+  } else if (win) {
+    bodyLines.push("You claimed and were RIGHT — you win!");
+  } else {
+    bodyLines.push("You claimed but were WRONG — you lose.");
+  }
+
+  // Add cluster warning if relevant
+  if (!win && analysis.hasClusteredWindow) {
+    bodyLines.push("");
+    bodyLines.push("⚠️ Note: You had 4 points within the vertical window, but they were too clustered horizontally (min separation 6.0 required).");
+  }
+
+  const body = bodyLines.join("\n");
 
   gameOverTitle.textContent = win && claimed ? "You Win!" : "Game Over";
   gameOverTitle.className   = win && claimed ? "win" : "lose";
@@ -346,7 +357,7 @@ function reveal(claimed: boolean): void {
   gameOverPanel.classList.remove("hidden");
 
   // Redraw now that layout has shifted
-  drawGraph(state.moves, winResult);
+  drawGraph(state.moves, analysis);
 }
 
 // ── New game ─────────────────────────────────────────────────────────────────
