@@ -3,7 +3,7 @@
 // Ported from noisyconnect-sin.py; see walkthrough.md for parity table.
 // ---------------------------------------------------------------------------
 
-export const MAX_MOVES = 20;
+export const MAX_MOVES = 30;
 
 // ---------- helpers ---------------------------------------------------------
 
