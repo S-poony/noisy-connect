@@ -147,7 +147,7 @@ function drawGraph(revealMoves: MoveRecord[] | null = null, analysis: GameAnalys
   ctx.textBaseline = "middle";
 
   // Y ticks
-  const yStep = 1;
+  const yStep = niceStep(yMax - yMin);
   const yStart = Math.ceil(yMin / yStep) * yStep;
   if (yStep > 0 && isFinite(yStep)) {
     for (let yv = yStart; yv <= yMax + 1e-9; yv += yStep) {
@@ -159,12 +159,49 @@ function drawGraph(revealMoves: MoveRecord[] | null = null, analysis: GameAnalys
       ctx.moveTo(PADDING.left, py);
       ctx.lineTo(PADDING.left + W, py);
       ctx.stroke();
+      ctx.fillStyle = COLOR_TICK;
       ctx.fillText(
         Number.isInteger(yv) ? String(yv) : yv.toFixed(1),
         PADDING.left - 6, py
       );
     }
   }
+
+  // ── Point Labels on Y-axis ────────────────────────────────────────────────
+  ctx.save();
+  ctx.font = "10px 'JetBrains Mono', monospace";
+  ctx.textAlign = "right";
+  ctx.textBaseline = "middle";
+
+  state.moves.forEach((m) => {
+    const val = revealMoves ? m.trueY : m.observed;
+    const isWinning = analysis?.isWin && analysis.valid.some(v => v.x === m.x); // Simple match
+    
+    let color = COLOR_NOISY;
+    if (revealMoves) {
+      color = isWinning ? COLOR_WIN : COLOR_TRUE;
+    }
+
+    const [, py] = toPixel(0, val, xMin, xMax, yMin, yMax, W, H);
+    
+    // Only draw if within visible range
+    if (py >= PADDING.top && py <= PADDING.top + H) {
+      ctx.fillStyle = color;
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = 0.8;
+
+      // Small tick on the axis
+      ctx.beginPath();
+      ctx.moveTo(PADDING.left - 4, py);
+      ctx.lineTo(PADDING.left, py);
+      ctx.stroke();
+
+      // Text label further left
+      // We use a small offset to not overlap with grid labels if possible
+      ctx.fillText(val.toFixed(2), PADDING.left - 35, py);
+    }
+  });
+  ctx.restore();
 
   // X ticks
   ctx.textAlign    = "center";
