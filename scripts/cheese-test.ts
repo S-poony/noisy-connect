@@ -1,7 +1,7 @@
 import { createGame, submitMove, analyzeGame, WIN_DX, MAX_MOVES } from "../src/game";
 
 const mode = process.argv[2];
-const numGames = 20;
+const numGames = 100;
 
 if (!mode || (mode !== "dx" && mode !== "max")) {
   console.error("Usage: bun scripts/cheese-test.ts <dx|max>");

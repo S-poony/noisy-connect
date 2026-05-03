@@ -12,9 +12,9 @@ export const WIN_WY = 1.0;
 export const WIN_DX = 6.0;
 
 export const CREATE_A_MIN = 4.0;
-export const CREATE_A_MAX = 10.0;
+export const CREATE_A_MAX = 50.0;
 export const CREATE_B_MIN = 0.1;
-export const CREATE_B_MAX = 2.0;
+export const CREATE_B_MAX = 1;
 
 export const CREATE_C_MIN = 0.5;
 export const CREATE_C_MAX = 2.0;
