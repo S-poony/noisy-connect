@@ -5,6 +5,23 @@
 
 export const MAX_MOVES = 30;
 
+// ---------- game constants (tweakable) --------------------------------------
+
+export const WIN_K  = 4;
+export const WIN_WY = 1.0;
+export const WIN_DX = 6.0;
+
+export const CREATE_A_MIN = 4.0;
+export const CREATE_A_MAX = 10.0;
+export const CREATE_B_MIN = 0.1;
+export const CREATE_B_MAX = 2.0;
+
+export const CREATE_C_MIN = 0.5;
+export const CREATE_C_MAX = 2.0;
+
+export const CREATE_D_MIN = 0.05;
+export const CREATE_D_MAX = 0.2;
+
 // ---------- helpers ---------------------------------------------------------
 
 /** Box-Muller transform — equivalent to Python's random.gauss(mu, sigma). */
@@ -55,15 +72,15 @@ export interface GameState {
 
 /** Create a new game with randomised secret parameters. */
 export function createGame(): GameState {
-  const a = uniform(4.0, 10.0);         // amplitude
-  const b = uniform(0.1, 2.0);          // frequency
+  const a = uniform(CREATE_A_MIN, CREATE_A_MAX);         // amplitude
+  const b = uniform(CREATE_B_MIN, CREATE_B_MAX);          // frequency
 
   // Scale sigmaEta inversely with |a|*b to keep jitter-caused output noise roughly constant
-  const c = uniform(0.5, 2.0);
+  const c = uniform(CREATE_C_MIN, CREATE_C_MAX);
   const sigmaEta = c / (Math.abs(a) * b);
 
   // Scale sigmaEps proportional to |a| to keep reading noise relative to wave height
-  const d = uniform(0.05, 0.2);
+  const d = uniform(CREATE_D_MIN, CREATE_D_MAX);
   const sigmaEps = d * Math.abs(a);
 
   return {
@@ -131,9 +148,9 @@ export interface GameAnalysis {
  * but horizontally separated (Dx=6.0).
  */
 export function analyzeGame(state: GameState): GameAnalysis {
-  const k = 4;
-  const Wy = 1.0;
-  const Dx = 6.0;
+  const k = WIN_K;
+  const Wy = WIN_WY;
+  const Dx = WIN_DX;
 
   const sortedByY = [...state.moves].sort((a, b) => a.trueY - b.trueY);
 
