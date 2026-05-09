@@ -48,7 +48,7 @@ let hoverX: number | null = null;
 
 // ── Graph constants ──────────────────────────────────────────────────────────
 
-const PADDING = { top: 20, right: 20, bottom: 36, left: 48 };
+const PADDING = { top: 20, right: 20, bottom: 36, left: 75 };
 const DOT_R_NOISY = 4;
 const DOT_R_TRUE  = 5;
 
