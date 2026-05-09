@@ -173,17 +173,28 @@ function drawGraph(revealMoves: MoveRecord[] | null = null, analysis: GameAnalys
   ctx.textAlign = "right";
   ctx.textBaseline = "middle";
 
-  state.moves.forEach((m) => {
+  const MIN_LABEL_DIST = 14; // minimum pixel distance between adjacent labels
+
+  // Sort moves by the displayed value so that vertically-close labels are adjacent
+  const sortedMoves = [...state.moves].sort((a, b) => {
+    const va = revealMoves ? a.trueY : a.observed;
+    const vb = revealMoves ? b.trueY : b.observed;
+    return va - vb;
+  });
+
+  let lastLabelPy: number | null = null;
+
+  sortedMoves.forEach((m) => {
     const val = revealMoves ? m.trueY : m.observed;
-    const isWinning = analysis?.isWin && analysis.valid.some(v => v.x === m.x); // Simple match
-    
+    const isWinning = analysis?.isWin && analysis.valid.some(v => v.x === m.x);
+
     let color = COLOR_NOISY;
     if (revealMoves) {
       color = isWinning ? COLOR_WIN : COLOR_TRUE;
     }
 
     const [, py] = toPixel(0, val, xMin, xMax, yMin, yMax, W, H);
-    
+
     // Only draw if within visible range
     if (py >= PADDING.top && py <= PADDING.top + H) {
       ctx.fillStyle = color;
@@ -196,9 +207,11 @@ function drawGraph(revealMoves: MoveRecord[] | null = null, analysis: GameAnalys
       ctx.lineTo(PADDING.left, py);
       ctx.stroke();
 
-      // Text label further left
-      // We use a small offset to not overlap with grid labels if possible
-      ctx.fillText(val.toFixed(2), PADDING.left - 35, py);
+      // Text label — skip if too close to the previous label
+      if (lastLabelPy === null || Math.abs(py - lastLabelPy) >= MIN_LABEL_DIST) {
+        ctx.fillText(val.toFixed(2), PADDING.left - 35, py);
+        lastLabelPy = py;
+      }
     }
   });
   ctx.restore();
